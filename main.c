@@ -1,31 +1,23 @@
-#include <stdio.h>
+#include "cpl_defines.h"
+#include "cpl_includes.h"
+
 #include "cpl.h"
 
 int main() {
-	cpl_tensor *T = cpl_matrix_alloc(4, 5);
-	for (int i = 0; i < 20; ++i) {
-		T->array[i] = i;
-	}
-	cpl_matrix_set(T, 1, 1, -1e7);
-	cpl_matrix_set(T, 4, 4, 1e-7);
-	cpl_matrix_print(T);
+	cpl_tensor *A = cpl_matrix_alloc(4, 4);
+	for (int i = 0; i < cpl_tensor_length(A); ++i)
+		A->array[i] = i;
+	cpl_matrix_print(A);
 
-	cpl_tensor *v = cpl_matrix_zalloc(1, 4);
-	cpl_matrix_set(v, 1, 2, 1.);
+	cpl_tensor *id = cpl_matrix_id(4);
+	cpl_matrix_print(id);
 
-	cpl_tensor *w = cpl_vector_alloc(5);
-	cpl_vector_set(w, 2, 1);
+	cpl_tensor *B = cpl_matrix_mult(A, id);
+	cpl_matrix_print(B);
 
-	cpl_matrix_print(v);
-
-	cpl_tensor *S = cpl_matrix_mult(v, T);
-
-	cpl_matrix_print(S);
-
-	cpl_tensor_free(S);
-	cpl_tensor_free(T);
-	cpl_tensor_free(v);
-	cpl_tensor_free(w);
+	cpl_tensor_free(A);
+	cpl_tensor_free(B);
+	cpl_tensor_free(id);
 
 	return 0;
 }

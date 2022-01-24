@@ -1,20 +1,34 @@
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include "cpl_defines.h"
+#include "cpl_includes.h"
 
 #include "cpl.h"
 
+int cpl_tuple_length(cpl_tuple *t) {
+	return t->length;
+}
+
 int cpl_tuple_get(cpl_tuple *t, int j) {
+	if (1 > j || j > cpl_tuple_length(t)) {
+		fprintf(stderr, "ERROR: Tuple index out of bounds.\nAborting...\n");
+		exit(EXIT_FAILURE);
+	}
+
 	return t->array[j-1];
 }
 
 int cpl_tuple_set(cpl_tuple *t, int j, int x) {
+	if (1 > j || j > cpl_tuple_length(t)) {
+		fprintf(stderr, "ERROR: Tuple index out of bounds.\nAborting...\n");
+		exit(EXIT_FAILURE);
+	}
+
 	t->array[j-1] = x;
 	return x;
 }
 
-int cpl_tuple_length(cpl_tuple *t) {
-	return t->length;
+void cpl_tuple_set_all(cpl_tuple *t, int c) {
+	for (int i = 1; i <= cpl_tuple_length(t); ++i)
+		cpl_tuple_set(t, i, c);
 }
 
 void cpl_tuple_free(cpl_tuple *t) {
@@ -23,6 +37,11 @@ void cpl_tuple_free(cpl_tuple *t) {
 }
 
 cpl_tuple *cpl_tuple_alloc(int length) {
+	if (length < 1) {
+		fprintf(stderr, "ERROR: Tuple length has to be at least 1.\nAborting...\n");
+		exit(EXIT_FAILURE);
+	}
+
 	cpl_tuple *t = malloc(sizeof(cpl_tuple));
 	t->length = length;
 
@@ -32,7 +51,12 @@ cpl_tuple *cpl_tuple_alloc(int length) {
 	return t;
 }
 
-cpl_tuple *cpl_tuple_salloc(int length, ...) {
+cpl_tuple *cpl_tuple_alloc_assign(int length, ...) {
+	if (length < 1) {
+		fprintf(stderr, "ERROR: Tuple length has to be at least 1.\nAborting...\n");
+		exit(EXIT_FAILURE);
+	}
+
 	cpl_tuple *t = cpl_tuple_alloc(length);
 
 	va_list ap;
@@ -45,23 +69,6 @@ cpl_tuple *cpl_tuple_salloc(int length, ...) {
 	return t;
 }
 
-cpl_tuple *cpl_tuple_ralloc(int length, int c) {
-	cpl_tuple *t = cpl_tuple_alloc(length);
-
-	for (int i = 1; i <= cpl_tuple_length(t); ++i) {
-		cpl_tuple_set(t, i, c);
-	}
-
-	return t;
-};
-
-cpl_tuple *cpl_tuple_zalloc(int length) {
-	return cpl_tuple_ralloc(length, 0);
-}
-
-cpl_tuple *cpl_tuple_1alloc(int length) {
-	return cpl_tuple_ralloc(length, 1);
-}
 
 void cpl_tuple_print(cpl_tuple *t) {
 	if (cpl_tuple_length(t) == 1) {
@@ -80,16 +87,16 @@ void cpl_tuple_print(cpl_tuple *t) {
 	}
 }
 
-int cpl_tuple_mult(cpl_tuple *t, int i) {
+int cpl_tuple_pdt(cpl_tuple *t, int i, int j) {
 	int pdt = 1;
-	for (int j = i; j <= cpl_tuple_length(t); ++j) {
-		pdt *= cpl_tuple_get(t, j);
+	for (int k = i; k <= j; ++k) {
+		pdt *= cpl_tuple_get(t, k);
 	}
 
 	return pdt;
 }
 
-int cpl_tuple_equal(cpl_tuple *s, cpl_tuple *t) {
+int cpl_tuple_isequal(cpl_tuple *s, cpl_tuple *t) {
 	if (cpl_tuple_length(s) != cpl_tuple_length(t))
 		return 0;
 
@@ -107,4 +114,13 @@ cpl_tuple* cpl_tuple_copy(cpl_tuple *t) {
 		cpl_tuple_set(s, i, cpl_tuple_get(t, i));
 
 	return s;
+}
+
+int cpl_tuple_ispos(cpl_tuple *t) {
+	for (int i = 1; i <= cpl_tuple_length(t); ++i) {
+		if (cpl_tuple_get(t, i) <= 0)
+			return 0;
+	}
+
+	return 1;
 }
