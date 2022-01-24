@@ -1,23 +1,32 @@
 #include "cpl_defines.h"
 #include "cpl_includes.h"
 
+#include <time.h>
+
 #include "cpl.h"
 
 int main() {
-	cpl_tensor *A = cpl_matrix_alloc(4, 4);
-	for (int i = 0; i < cpl_tensor_length(A); ++i)
-		A->array[i] = i;
-	cpl_matrix_print(A);
+	int dim = 100;
+	cpl_tensor *A = cpl_matrix_alloc(dim, dim);
+	for (int i = 1; i <= dim; ++i) {
+		for (int j = 1; j <= dim; ++j) {
+			cpl_tensor_set(A, i, j, 1.0 / (i+j-1));
+		}
+	}
 
-	cpl_tensor *id = cpl_matrix_id(4);
-	cpl_matrix_print(id);
+	cpl_tensor *B = cpl_matrix_alloc(dim, dim);
+	cpl_tensor_set_all(B, 1.0);
 
-	cpl_tensor *B = cpl_matrix_mult(A, id);
-	cpl_matrix_print(B);
+	double start = clock();
+	cpl_tensor *AB = cpl_matrix_mult(A, B);
+	double end = clock();
 
-	cpl_tensor_free(A);
+	double time_elapsed = ((double) (end - start)) / CLOCKS_PER_SEC;
+	printf("Time to multiply two %dx%d matrices: %f sec", dim, dim, time_elapsed);
+
+	cpl_tensor_free(AB);
 	cpl_tensor_free(B);
-	cpl_tensor_free(id);
+	cpl_tensor_free(A);
 
 	return 0;
 }

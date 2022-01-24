@@ -33,25 +33,43 @@ typedef struct {
 cpl_tuple* cpl_tensor_shape(cpl_tensor*);
 int cpl_tensor_rank(cpl_tensor*);
 int cpl_tensor_length(cpl_tensor*);
+void cpl_tensor_reshape(cpl_tensor*, cpl_tuple*);
 
 scalar cpl_tensor_get(cpl_tensor*, ...);
 scalar cpl_tensor_set(cpl_tensor*, ...);
 void cpl_tensor_set_all(cpl_tensor*, scalar);
 
-cpl_tensor* cpl_tensor_scalar_mult(cpl_tensor*, scalar);
+void cpl_tensor_scale(cpl_tensor*, scalar);
 cpl_tensor* cpl_tensor_add(cpl_tensor*, cpl_tensor*);
-scalar cpl_tensor_hadamard(cpl_tensor*, cpl_tensor*);
+cpl_tensor* cpl_tensor_hadamard(cpl_tensor*, cpl_tensor*);
 
 cpl_tensor* cpl_tensor_alloc(int, ...);
 cpl_tensor* cpl_tensor_alloc_shape(cpl_tuple*);
+cpl_tensor* cpl_tensor_copy(cpl_tensor*);
 void cpl_tensor_free(cpl_tensor*);
 
 cpl_tensor* cpl_vector_alloc(int);
+
 int cpl_vector_dim(cpl_tensor*);
+int cpl_vector_swap(cpl_tensor*, int, int);
+
 scalar cpl_vector_dot(cpl_tensor*, cpl_tensor*);
 
 cpl_tensor* cpl_matrix_alloc(int, int);
 cpl_tensor* cpl_matrix_id(int);
+
+cpl_tensor* cpl_matrix_get_row(cpl_tensor*, int);
+cpl_tensor* cpl_matrix_set_row(cpl_tensor*, int, cpl_tensor*);
+int cpl_matrix_swap_rows(cpl_tensor*, int, int);
+void cpl_matrix_scale_row(cpl_tensor*, int, scalar);
+void cpl_matrix_add_to_row(cpl_tensor*, int, cpl_tensor*);
+
+cpl_tensor* cpl_matrix_get_col(cpl_tensor*, int);
+cpl_tensor* cpl_matrix_set_col(cpl_tensor*, int, cpl_tensor*);
+int cpl_matrix_swap_cols(cpl_tensor*, int, int);
+void cpl_matrix_scale_col(cpl_tensor*, int, scalar);
+void cpl_matrix_add_to_col(cpl_tensor*, int, cpl_tensor*);
+
 
 int cpl_matrix_rows(cpl_tensor*);
 int cpl_matrix_cols(cpl_tensor*);
@@ -60,3 +78,5 @@ void cpl_matrix_print(cpl_tensor*);
 
 cpl_tensor* cpl_matrix_mult(cpl_tensor*, cpl_tensor*);
 
+/* Linear Algebra */
+cpl_tensor* cpl_linalg_gaussjordan(cpl_tensor*, cpl_tensor*);
