@@ -4,9 +4,18 @@
 #include "cpl.h"
 
 cpl_tensor *cpl_linalg_gaussjordan(cpl_tensor* U, cpl_tensor *B) {
-	/* Assumptions: (AX = B) is a well defined system, A is square */
+	/* Returns NULL if U is singular */
+
+	cpl_check(cpl_matrix_issquare(U),
+			  "Matrix passed to cpl_linalg_gaussjordan should be square");
 	cpl_tensor *V = cpl_tensor_copy(U);
+
 	cpl_tensor *X = cpl_tensor_copy(B);
+	if (cpl_tensor_rank(X) == 1)
+		cpl_vector_to_matrix(X);
+	cpl_check(cpl_matrix_rows(U) == cpl_matrix_rows(B),
+			  "UX = B is not a well defined system");
+
 	int swaps = 0;
 
 	for (int j = 1; j <= cpl_matrix_cols(V); ++j) {
@@ -22,8 +31,9 @@ cpl_tensor *cpl_linalg_gaussjordan(cpl_tensor* U, cpl_tensor *B) {
 				break;
 
 			} else if (i == cpl_matrix_rows(V)) {
-				fprintf(stderr, "ERROR: Matrix is not invertible.\nAborting...\n");
-				exit(EXIT_FAILURE);
+				cpl_tensor_free(X);
+				cpl_tensor_free(V);
+				return NULL;
 			}
 		}
 

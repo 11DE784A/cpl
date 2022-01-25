@@ -34,10 +34,8 @@ void cpl_tensor_free(cpl_tensor* T) {
 }
 
 cpl_tensor *cpl_tensor_alloc_shape(cpl_tuple *shape) {
-	if (!cpl_tuple_ispos(shape)) {
-		fprintf(stderr, "ERROR: Invalid shape for tensor. All elements of the shape tuple must be postive integers.\nAborting...\n");
-		exit(EXIT_FAILURE);
-	}
+	cpl_check(cpl_tuple_ispos(shape), 
+			  "Tensor shape should be a tuple of positive integers");
 
 	cpl_tensor *T = malloc(sizeof(cpl_tensor));
 	T->shape = shape;
@@ -55,12 +53,8 @@ cpl_tensor *cpl_tensor_alloc(int rank, ...) {
 	va_start(ap, rank);
 	for (int i = 1; i <= rank; ++i) {
 		int ith_dim = va_arg(ap, int);
-
-		if (ith_dim <= 0) {
-			cpl_tuple_free(shape);
-			fprintf(stderr, "ERROR: Invalid shape for tensor. All elements of the shape tuple must be postive integers.\nAborting...\n");
-			exit(EXIT_FAILURE);
-		}
+		cpl_check(ith_dim >= 1, 
+				  "Tensor shape should be a tuple of positive integers");
 
 		cpl_tuple_set(shape, i, ith_dim);
 	}
@@ -78,13 +72,16 @@ cpl_tensor *cpl_tensor_copy(cpl_tensor *T) {
 }
 
 void cpl_tensor_reshape(cpl_tensor *T, cpl_tuple *new_shape) {
-	if (cpl_tensor_length(T) 
-			!= cpl_tuple_pdt(new_shape, 1, cpl_tuple_length(new_shape))) {
-		fprintf(stderr, "ERROR: Cannot reshape, size mismatch.");
-		exit(EXIT_FAILURE);
-	}
+	cpl_check(cpl_tensor_length(T) 
+				== cpl_tuple_pdt(new_shape, 1, cpl_tuple_length(new_shape)), 
+			  "Size mismatch when reshaping tensor");
+
 	cpl_tuple_free(T->shape);
 	T->shape = new_shape;
+}
+
+void cpl_tensor_flatten(cpl_tensor *T) {
+	cpl_tensor_reshape(T, cpl_tuple_alloc_assign(1, cpl_tensor_length(T)));
 }
 
 scalar cpl_tensor_get(cpl_tensor *T, ...) {
@@ -96,10 +93,8 @@ scalar cpl_tensor_get(cpl_tensor *T, ...) {
 		int stride = cpl_tuple_pdt(cpl_tensor_shape(T), 1, i - 1);
 		pos += steps * stride;
 
-		if (steps < 0 || steps > cpl_tuple_get(cpl_tensor_shape(T), i) - 1) {
-			fprintf(stderr, "ERROR: Tensor index out of bounds.\nAborting...\n");
-			exit(EXIT_FAILURE);
-		}
+		cpl_check(1 <= steps || steps <= cpl_tuple_get(cpl_tensor_shape(T), i) - 1,
+				  "Tensor index out of bounds");
 	}
 
 	va_end(ap);
@@ -116,10 +111,8 @@ scalar cpl_tensor_set(cpl_tensor *T, ...) {
 		int stride = cpl_tuple_pdt(cpl_tensor_shape(T), 1, i - 1);
 		pos += steps * stride;
 
-		if (steps < 0 || steps > cpl_tuple_get(cpl_tensor_shape(T), i) - 1) {
-			fprintf(stderr, "ERROR: Tensor index out of bounds.\nAborting...\n");
-			exit(EXIT_FAILURE);
-		}
+		cpl_check(1 <= steps || steps <= cpl_tuple_get(cpl_tensor_shape(T), i) - 1,
+				  "Tensor index out of bounds");
 	}
 
 	T->array[pos] = va_arg(ap, scalar);
@@ -139,10 +132,8 @@ void cpl_tensor_scale(cpl_tensor *T, scalar c) {
 }
 
 cpl_tensor *cpl_tensor_add(cpl_tensor *R, cpl_tensor *S) {
-	if (!cpl_tuple_isequal(cpl_tensor_shape(R), cpl_tensor_shape(S))) {
-		fprintf(stderr, "ERROR: Cannot add tensors of different shapes.\nAborting...\n");
-		exit(EXIT_FAILURE);
-	}
+	cpl_check(cpl_tuple_isequal(cpl_tensor_shape(R), cpl_tensor_shape(S)),
+			  "Tried to add tensors of different shapes");
 
 	cpl_tensor *T;
 	T = cpl_tensor_alloc_shape(cpl_tuple_copy(cpl_tensor_shape(R)));
@@ -153,10 +144,8 @@ cpl_tensor *cpl_tensor_add(cpl_tensor *R, cpl_tensor *S) {
 }
 
 cpl_tensor* cpl_tensor_hadamard(cpl_tensor *S, cpl_tensor *T) {
-	if (!cpl_tuple_isequal(cpl_tensor_shape(S), cpl_tensor_shape(T))) {
-		fprintf(stderr, "ERROR: Cannot Hadamard tensors of different shapes.\nAborting...\n");
-		exit(EXIT_FAILURE);
-	}
+	cpl_check(cpl_tuple_isequal(cpl_tensor_shape(S), cpl_tensor_shape(T)),
+			  "Tried to Hadamard tensors of different shapes");
 
 	cpl_tensor* R = cpl_tensor_alloc_shape(cpl_tensor_shape(S));
 	for (int i = 0; i < cpl_tensor_length(S); ++i)
@@ -170,10 +159,8 @@ cpl_tensor *cpl_vector_alloc(int dim) {
 }
 
 int cpl_vector_dim(cpl_tensor *v) {
-	if (cpl_tensor_rank(v) > 1) {
-		fprintf(stderr, "ERROR: Argument passed to `cpl_vector_dim` is not a vector.\nAborting...\n");
-		exit(EXIT_FAILURE);
-	}
+	cpl_check(cpl_tensor_rank(v) == 1, 
+			  "Argument passed to cpl_vector_dim is not a vector");
 
 	return cpl_tensor_length(v);
 }
@@ -188,11 +175,13 @@ int cpl_vector_swap(cpl_tensor *v, int i, int j) {
 	return 1;
 }
 
+void cpl_vector_to_matrix(cpl_tensor *v) {
+	cpl_tensor_reshape(v, cpl_tuple_alloc_assign(2, cpl_vector_dim(v), 1));
+}
+
 scalar cpl_vector_dot(cpl_tensor *v, cpl_tensor *w) {
-	if (cpl_vector_dim(v) != cpl_vector_dim(w)) {
-		fprintf(stderr, "ERROR: Cannot dot vectors of different dimensions.\nAborting...\n");
-		exit(EXIT_FAILURE);
-	}
+	cpl_check(cpl_vector_dim(v) == cpl_vector_dim(w),
+			  "Cannot dot vectors of different dimensions");
 
 	scalar dot = 0;
 	for (int i = 1; i <= cpl_vector_dim(v); ++i)
@@ -217,11 +206,19 @@ cpl_tensor *cpl_matrix_id(int dim) {
 }
 
 int cpl_matrix_rows(cpl_tensor *M) {
+	cpl_check(cpl_tensor_rank(M) == 2,
+			  "Argument passed to cpl_matrix_rows was not a matrix");
 	return cpl_tuple_get(cpl_tensor_shape(M), 1);
 }
 
 int cpl_matrix_cols(cpl_tensor *M) {
+	cpl_check(cpl_tensor_rank(M) == 2,
+			  "Argument passed to cpl_matrix_cols was not a matrix");
 	return cpl_tuple_get(cpl_tensor_shape(M), 2);
+}
+
+int cpl_matrix_issquare(cpl_tensor *M) {
+	return cpl_matrix_rows(M) == cpl_matrix_cols(M);
 }
 
 cpl_tensor *cpl_matrix_get_col(cpl_tensor *A, int i) {
@@ -233,6 +230,9 @@ cpl_tensor *cpl_matrix_get_col(cpl_tensor *A, int i) {
 }
 
 cpl_tensor *cpl_matrix_set_col(cpl_tensor *A, int i, cpl_tensor *v) {
+	cpl_check(cpl_matrix_rows(A) == cpl_vector_dim(v),
+			  "Size mismatch in cpl_matrix_set_col");
+
 	for (int j = 1; j <= cpl_matrix_rows(A); ++j)
 		cpl_tensor_set(A, j, i, cpl_tensor_get(v, j));
 
@@ -258,6 +258,9 @@ void cpl_matrix_scale_col(cpl_tensor *A, int i, scalar c) {
 }
 
 void cpl_matrix_add_to_col(cpl_tensor *A, int j, cpl_tensor *v) {
+	cpl_check(cpl_matrix_rows(A) == cpl_vector_dim(v),
+			  "Size mismatch in cpl_matrix_add_to_col");
+
 	for (int i = 1; i <= cpl_matrix_rows(A); ++i)
 		cpl_tensor_set(A, i, j, cpl_tensor_get(A, i, j) + cpl_tensor_get(v, i));
 }
@@ -271,6 +274,9 @@ cpl_tensor *cpl_matrix_get_row(cpl_tensor *A, int i) {
 }
 
 cpl_tensor *cpl_matrix_set_row(cpl_tensor *A, int i, cpl_tensor *v) {
+	cpl_check(cpl_matrix_cols(A) == cpl_vector_dim(v),
+			  "Size mismatch in cpl_matrix_set_row");
+
 	for (int j = 1; j <= cpl_matrix_cols(A); ++j)
 		cpl_tensor_set(A, i, j, cpl_tensor_get(v, j));
 
@@ -296,6 +302,8 @@ void cpl_matrix_scale_row(cpl_tensor *A, int i, scalar c) {
 }
 
 void cpl_matrix_add_to_row(cpl_tensor *A, int i, cpl_tensor *v) {
+	cpl_check(cpl_matrix_cols(A) == cpl_vector_dim(v),
+			  "Size mismatch in cpl_matrix_add_to_row");
 	for (int j = 1; j <= cpl_matrix_cols(A); ++j)
 		cpl_tensor_set(A, i, j, cpl_tensor_get(A, i, j) + cpl_tensor_get(v, j));
 }

@@ -8,19 +8,15 @@ int cpl_tuple_length(cpl_tuple *t) {
 }
 
 int cpl_tuple_get(cpl_tuple *t, int j) {
-	if (1 > j || j > cpl_tuple_length(t)) {
-		fprintf(stderr, "ERROR: Tuple index out of bounds.\nAborting...\n");
-		exit(EXIT_FAILURE);
-	}
+	cpl_check(1 <= j || j <= cpl_tuple_length(t),
+			  "Tuple index out of bounds");
 
 	return t->array[j-1];
 }
 
 int cpl_tuple_set(cpl_tuple *t, int j, int x) {
-	if (1 > j || j > cpl_tuple_length(t)) {
-		fprintf(stderr, "ERROR: Tuple index out of bounds.\nAborting...\n");
-		exit(EXIT_FAILURE);
-	}
+	cpl_check(1 <= j || j <= cpl_tuple_length(t),
+			  "Tuple index out of bounds");
 
 	t->array[j-1] = x;
 	return x;
@@ -37,10 +33,7 @@ void cpl_tuple_free(cpl_tuple *t) {
 }
 
 cpl_tuple *cpl_tuple_alloc(int length) {
-	if (length < 1) {
-		fprintf(stderr, "ERROR: Tuple length has to be at least 1.\nAborting...\n");
-		exit(EXIT_FAILURE);
-	}
+	cpl_check (length >= 1, "Tuple length should be a positive integer");
 
 	cpl_tuple *t = malloc(sizeof(cpl_tuple));
 	t->length = length;
@@ -52,10 +45,7 @@ cpl_tuple *cpl_tuple_alloc(int length) {
 }
 
 cpl_tuple *cpl_tuple_alloc_assign(int length, ...) {
-	if (length < 1) {
-		fprintf(stderr, "ERROR: Tuple length has to be at least 1.\nAborting...\n");
-		exit(EXIT_FAILURE);
-	}
+	cpl_check (length >= 1, "Tuple length should be a positive integer");
 
 	cpl_tuple *t = cpl_tuple_alloc(length);
 

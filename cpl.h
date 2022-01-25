@@ -2,6 +2,9 @@
 
 #include "cpl_defines.h"
 
+/* Commons */
+void cpl_check(int, char*);
+
 /* Tuples */
 typedef struct {
 	int length;
@@ -34,6 +37,7 @@ cpl_tuple* cpl_tensor_shape(cpl_tensor*);
 int cpl_tensor_rank(cpl_tensor*);
 int cpl_tensor_length(cpl_tensor*);
 void cpl_tensor_reshape(cpl_tensor*, cpl_tuple*);
+void cpl_tensor_flatten(cpl_tensor*);
 
 scalar cpl_tensor_get(cpl_tensor*, ...);
 scalar cpl_tensor_set(cpl_tensor*, ...);
@@ -52,11 +56,13 @@ cpl_tensor* cpl_vector_alloc(int);
 
 int cpl_vector_dim(cpl_tensor*);
 int cpl_vector_swap(cpl_tensor*, int, int);
+void cpl_vector_to_matrix(cpl_tensor*);
 
 scalar cpl_vector_dot(cpl_tensor*, cpl_tensor*);
 
 cpl_tensor* cpl_matrix_alloc(int, int);
 cpl_tensor* cpl_matrix_id(int);
+int cpl_matrix_issquare(cpl_tensor*);
 
 cpl_tensor* cpl_matrix_get_row(cpl_tensor*, int);
 cpl_tensor* cpl_matrix_set_row(cpl_tensor*, int, cpl_tensor*);
