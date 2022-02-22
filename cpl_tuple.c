@@ -1,5 +1,5 @@
-#include "cpl_defines.h"
 #include "cpl_includes.h"
+#include "cpl_defines.h"
 
 #include "cpl.h"
 

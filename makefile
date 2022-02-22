@@ -1,4 +1,4 @@
-CC=gcc -Wall -g -O0
+CC=gcc -lm -Wall -g -O0
 HEADERS=cpl_defines.h cpl_includes.h cpl.h
 
 main: main.o cpl_tuple.o cpl_tensor.o cpl_linalg.o cpl_commons.o
