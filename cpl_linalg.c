@@ -13,7 +13,7 @@ cpl_tensor *cpl_linalg_gaussjordan(cpl_tensor* U, cpl_tensor *B) {
 	cpl_tensor *X = cpl_tensor_copy(B);
 	if (cpl_tensor_rank(X) == 1)
 		cpl_vector_to_matrix(X);
-	cpl_check(cpl_matrix_rows(U) == cpl_matrix_rows(B),
+	cpl_check(cpl_matrix_rows(U) == cpl_matrix_rows(X),
 			  "UX = B is not a well defined system");
 
 	int swaps = 0;
@@ -61,5 +61,107 @@ cpl_tensor *cpl_linalg_gaussjordan(cpl_tensor* U, cpl_tensor *B) {
 	cpl_tensor_free(V);
 
 	return X;
+}
+
+cpl_tensor *cpl_linalg_ludecomp(cpl_tensor *A) {
+	cpl_check(cpl_matrix_issquare(A),
+			  "Matrix passed to cpl_linalg_ludecomp should be square");
+
+	cpl_tensor *LU = cpl_tensor_copy(A);
+	int dim = cpl_tuple_get(cpl_tensor_shape(A), 1);
+	for (int j = 1; j <= dim; ++j) {
+		for (int i = 1; i <= j; ++i) {
+			scalar Lik_Ukj = 0;
+			for (int k = 1; k <= i - 1; ++k)
+				Lik_Ukj += cpl_tensor_get(LU, i, k) * cpl_tensor_get(LU, k, j);
+
+			cpl_tensor_set(LU, i, j, cpl_tensor_get(LU, i, j) - Lik_Ukj);
+		}
+
+		for (int i = j + 1; i <= dim; ++i) {
+			scalar Lik_Ukj = 0;
+			for (int k = 1; k <= j - 1; ++k)
+				Lik_Ukj += cpl_tensor_get(LU, i, k) * cpl_tensor_get(LU, k, j);
+
+			cpl_tensor_set(LU, i, j, (cpl_tensor_get(LU, i, j) - Lik_Ukj) 
+										/ cpl_tensor_get(LU, j, j));
+		}
+	}
+
+	return LU;
+}
+
+void cpl_linalg_jacobi(cpl_tensor *U, cpl_tensor *B, cpl_tensor *x0) {
+	cpl_check(cpl_matrix_issquare(U),
+			  "Matrix passed to cpl_linalg_jacobi should be square");
+	cpl_check(cpl_matrix_rows(U) == cpl_vector_dim(B)
+				&& cpl_matrix_cols(U) == cpl_vector_dim(x0),
+			  "UX = B is not a well defined system");
+
+	cpl_tensor *x1 = cpl_tensor_copy(x0);
+
+	int iters = 0;
+	scalar residual = 1.0 / TOL;
+	while (residual  > TOL) {
+		if (++iters > MAX_ITERS) {
+			cpl_tensor_free(x1);
+			fprintf(stderr, "Failed to converge after %d iterations\n", MAX_ITERS);
+			return;
+		}
+
+		for (int i = 1; i <= cpl_vector_dim(x1); ++i) {
+			scalar Uij_xj = 0;
+			for (int j = 1; j <= cpl_vector_dim(x0); ++j) {
+				if (i == j) continue;
+				Uij_xj += cpl_tensor_get(U, i, j) * cpl_tensor_get(x0, j);
+			}
+
+			cpl_tensor_set(x1, i,
+						   (cpl_tensor_get(B, i) - Uij_xj) / cpl_tensor_get(U, i, i));
+
+			residual = cpl_tensor_distance(x0, x1);
+			cpl_tensor_overwrite(x0, x1);
+		}
+	}
+
+	cpl_tensor_free(x1);
+}
+
+void cpl_linalg_gaussseidel(cpl_tensor *U, cpl_tensor *B, cpl_tensor *x0) {
+	cpl_check(cpl_matrix_issquare(U),
+			  "Matrix passed to cpl_linalg_gaussseidel should be square");
+	cpl_check(cpl_matrix_rows(U) == cpl_vector_dim(B)
+				&& cpl_matrix_cols(U) == cpl_vector_dim(x0),
+			  "UX = B is not a well defined system");
+
+	cpl_tensor *x1 = cpl_tensor_copy(x0);
+
+	int iters = 0;
+	scalar residual = 1.0 / TOL;
+	while (residual > TOL) {
+		if (++iters > MAX_ITERS) {
+			cpl_tensor_free(x1);
+			fprintf(stderr, "Failed to converge after %d iterations\n", MAX_ITERS);
+			return;
+		}
+
+		for (int i = 1; i <= cpl_vector_dim(x1); ++i) {
+			scalar Uij_xj_1 = 0, Uij_xj_2 = 0;
+			for (int j = 1; j <= i - 1; ++j)
+				Uij_xj_1 += cpl_tensor_get(U, i, j) * cpl_tensor_get(x1, j);
+
+			for (int j = i+1; j <= cpl_vector_dim(x0); ++j)
+				Uij_xj_2 += cpl_tensor_get(U, i, j) * cpl_tensor_get(x0, j);
+
+			cpl_tensor_set(x1, i,
+						   (cpl_tensor_get(B, i) - Uij_xj_1 - Uij_xj_2) 
+								/ cpl_tensor_get(U, i, i));
+
+			residual = cpl_tensor_distance(x0, x1);
+			cpl_tensor_overwrite(x0, x1);
+		}
+	}
+
+	cpl_tensor_free(x1);
 }
 

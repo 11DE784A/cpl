@@ -27,6 +27,18 @@ int cpl_tensor_isequal(cpl_tensor *S, cpl_tensor *T) {
 	return 1;
 }
 
+scalar cpl_tensor_distance(cpl_tensor *S, cpl_tensor *T) {
+	cpl_check(cpl_tuple_isequal(cpl_tensor_shape(S), 
+								cpl_tensor_shape(T)),
+			  "Cannot compute distance between tensors of different shapes");
+
+	scalar X = 0;
+	for (int i = 0; i < cpl_tensor_length(T); ++i)
+		X += pow(T->array[i] - S->array[i], 2);
+
+	return sqrt(X);
+}
+
 void cpl_tensor_free(cpl_tensor* T) {
 	cpl_tuple_free(T->shape);
 	free(T->array);
@@ -69,6 +81,14 @@ cpl_tensor *cpl_tensor_copy(cpl_tensor *T) {
 		S->array[i] = T->array[i];
 
 	return S;
+}
+
+void cpl_tensor_overwrite(cpl_tensor *T, cpl_tensor *S) {
+	cpl_check(cpl_tuple_isequal(cpl_tensor_shape(T), 
+								cpl_tensor_shape(S)),
+			  "Tensors T and S should be of the same shape for overwriting");
+	for (int i = 0; i < cpl_tensor_length(T); ++i)
+		T->array[i] = S->array[i];
 }
 
 void cpl_tensor_reshape(cpl_tensor *T, cpl_tuple *new_shape) {

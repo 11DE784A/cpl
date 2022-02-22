@@ -36,6 +36,7 @@ typedef struct {
 cpl_tuple* cpl_tensor_shape(cpl_tensor*);
 int cpl_tensor_rank(cpl_tensor*);
 int cpl_tensor_length(cpl_tensor*);
+scalar cpl_tensor_distance(cpl_tensor*, cpl_tensor*);
 void cpl_tensor_reshape(cpl_tensor*, cpl_tuple*);
 void cpl_tensor_flatten(cpl_tensor*);
 
@@ -50,6 +51,7 @@ cpl_tensor* cpl_tensor_hadamard(cpl_tensor*, cpl_tensor*);
 cpl_tensor* cpl_tensor_alloc(int, ...);
 cpl_tensor* cpl_tensor_alloc_shape(cpl_tuple*);
 cpl_tensor* cpl_tensor_copy(cpl_tensor*);
+void cpl_tensor_overwrite(cpl_tensor*, cpl_tensor*);
 void cpl_tensor_free(cpl_tensor*);
 
 cpl_tensor* cpl_vector_alloc(int);
@@ -86,3 +88,6 @@ cpl_tensor* cpl_matrix_mult(cpl_tensor*, cpl_tensor*);
 
 /* Linear Algebra */
 cpl_tensor* cpl_linalg_gaussjordan(cpl_tensor*, cpl_tensor*);
+void cpl_linalg_jacobi(cpl_tensor*, cpl_tensor*, cpl_tensor*);
+void cpl_linalg_gaussseidel(cpl_tensor*, cpl_tensor*, cpl_tensor*);
+cpl_tensor* cpl_linalg_ludecomp(cpl_tensor*);
