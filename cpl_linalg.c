@@ -67,7 +67,7 @@ cpl_tensor *cpl_linalg_ludecomp(cpl_tensor *A) {
 	cpl_check(cpl_matrix_issquare(A),
 			  "Matrix passed to cpl_linalg_ludecomp should be square");
 
-	cpl_tensor *LU = cpl_tensor_copy(A);
+	cpl_tensor *LU = cpl_tensor_alloc_shape(cpl_tuple_copy(cpl_tensor_shape(A)));
 	int dim = cpl_tuple_get(cpl_tensor_shape(A), 1);
 	for (int j = 1; j <= dim; ++j) {
 		for (int i = 1; i <= j; ++i) {
@@ -75,7 +75,7 @@ cpl_tensor *cpl_linalg_ludecomp(cpl_tensor *A) {
 			for (int k = 1; k <= i - 1; ++k)
 				Lik_Ukj += cpl_tensor_get(LU, i, k) * cpl_tensor_get(LU, k, j);
 
-			cpl_tensor_set(LU, i, j, cpl_tensor_get(LU, i, j) - Lik_Ukj);
+			cpl_tensor_set(LU, i, j, cpl_tensor_get(A, i, j) - Lik_Ukj);
 		}
 
 		for (int i = j + 1; i <= dim; ++i) {
@@ -83,12 +83,39 @@ cpl_tensor *cpl_linalg_ludecomp(cpl_tensor *A) {
 			for (int k = 1; k <= j - 1; ++k)
 				Lik_Ukj += cpl_tensor_get(LU, i, k) * cpl_tensor_get(LU, k, j);
 
-			cpl_tensor_set(LU, i, j, (cpl_tensor_get(LU, i, j) - Lik_Ukj) 
+			cpl_tensor_set(LU, i, j, (cpl_tensor_get(A, i, j) - Lik_Ukj) 
 										/ cpl_tensor_get(LU, j, j));
 		}
 	}
 
 	return LU;
+}
+
+cpl_tensor *cpl_linalg_cholesky(cpl_tensor *A) {
+	cpl_check(cpl_matrix_issquare(A),
+			  "Matrix passed to cpl_linalg_cholesky should be square");
+
+	int dim = cpl_tuple_get(cpl_tensor_shape(A), 1);
+	cpl_tensor *L = cpl_tensor_alloc_shape(cpl_tuple_copy(cpl_tensor_shape(A)));
+	cpl_tensor_set_all(L, 0.0);
+
+	for (int i = 1; i <= dim; ++i) {
+		scalar Lik2 = 0;
+		for (int k = 1; k <= i - 1; ++k)
+			Lik2 += pow(cpl_tensor_get(L, i, k), 2);
+
+		cpl_tensor_set(L, i, i, sqrt(cpl_tensor_get(A, i, i) - Lik2));
+
+		for (int j = i + 1; j <= dim; ++j) {
+			scalar Lik_Ljk = 0;
+			for (int k = 1; k <= i - 1; ++k)
+				Lik_Ljk += cpl_tensor_get(L, i, k) * cpl_tensor_get(L, j, k);
+
+			cpl_tensor_set(L, j, i, (cpl_tensor_get(A, i, j) - Lik_Ljk)
+									/ cpl_tensor_get(L, i, i));
+		}
+	}
+	return L;
 }
 
 void cpl_linalg_jacobi(cpl_tensor *U, cpl_tensor *B, cpl_tensor *x0) {
