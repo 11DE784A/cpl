@@ -140,10 +140,9 @@ int cpl_linalg_jacobi(cpl_matrix *U, cpl_matrix *B, cpl_matrix *X0) {
 
 				cpl_set(X1, i, j, (cpl_get(B, i, j) - Uik_Xkj) / cpl_get(U, i, i));
 				residual += sabs(cpl_get(X0, i, j) - cpl_get(X1, i, j));
+				cpl_set(X0, i, j, cpl_get(X1, i, j));
 			}
 		}
-
-		cpl_matrix_overwrite(X0, X1);
 	}
 
 	cpl_free(X1);
@@ -178,6 +177,7 @@ int cpl_linalg_seidel(cpl_matrix *U, cpl_matrix *B, cpl_matrix *X) {
 				cpl_set(X, i, j, Xij);
 			}
 		}
+	}
 
 	return iter;
 }

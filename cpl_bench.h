@@ -2,6 +2,8 @@
 
 #define CPL_BENCH
 
+#include "cpl_format.h"
+
 #define time(process) \
 	({clock_t _tstart = clock(); \
 	  int _nstart = NALLOC; \
@@ -10,11 +12,13 @@
 	  double _tdelta = (double) (clock() - _tstart) / CLOCKS_PER_SEC; \
 	  int _ndelta = NALLOC - _nstart; \
 	  int _bdelta = BALLOC - _bstart; \
-	  printf("%s:%d " #process ": %f seconds (%d allocations, %d bytes)\n\n", \
-			  __FILE__, __LINE__, _tdelta, _ndelta, _bdelta);})
+	  char _ftdelta[FMTWIDTH]; strfsecs(_ftdelta, _tdelta); \
+	  char _fbdelta[FMTWIDTH]; strfbytes(_fbdelta, _bdelta); \
+	  printf("%s:%d " #process ": %s (%d allocations, %s)\n\n", \
+			  __FILE__, __LINE__, _ftdelta, _ndelta, _fbdelta);})
 
-int NALLOC = 0;
-int BALLOC = 0;
+static int NALLOC = 0;
+static int BALLOC = 0;
 
 void* malloc(size_t sz) {
     void *(*libc_malloc)(size_t) = dlsym(RTLD_NEXT, "malloc");
