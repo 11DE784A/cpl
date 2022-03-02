@@ -10,7 +10,7 @@
 	  double _tdelta = (double) (clock() - _tstart) / CLOCKS_PER_SEC; \
 	  int _ndelta = NALLOC - _nstart; \
 	  int _bdelta = BALLOC - _bstart; \
-	  printf("%s:%d " #process ": %f seconds (%d allocations, %d bytes)\n", \
+	  printf("%s:%d " #process ": %f seconds (%d allocations, %d bytes)\n\n", \
 			  __FILE__, __LINE__, _tdelta, _ndelta, _bdelta);})
 
 int NALLOC = 0;
@@ -28,6 +28,13 @@ void* calloc(size_t n, size_t sz) {
 	NALLOC += 1;
 	BALLOC += sz;
     return libc_calloc(n, sz);
+}
+
+void* realloc(void *ptr, size_t sz) {
+    void *(*libc_realloc)(void*, size_t) = dlsym(RTLD_NEXT, "realloc");
+	NALLOC += 1;
+	BALLOC += sz;
+    return libc_realloc(ptr, sz);
 }
 
 #endif
