@@ -22,6 +22,7 @@ typedef struct {
 cpl_vector *cpl_vector_alloc(int);
 cpl_vector *cpl_vector_calloc(int);
 cpl_vector *cpl_vector_copy(cpl_vector*);
+cpl_vector *cpl_vector_like(cpl_vector*);
 void cpl_vector_free(cpl_vector*);
 
 cpl_vector *cpl_vector_hot(int);
@@ -71,7 +72,7 @@ int cpl_matrix_issquare(cpl_matrix*);
 
 cpl_matrix *cpl_matrix_scale(cpl_matrix*, scalar);
 
-cpl_vector *cpl_matrix_get_row(cpl_matrix*, int);
+void cpl_matrix_get_row(cpl_matrix*, int, cpl_vector*);
 void cpl_matrix_scale_row(cpl_matrix*, int, scalar);
 int cpl_matrix_swap_rows(cpl_matrix*, int ,int);
 void cpl_matrix_add_to_row(cpl_matrix*, int, cpl_vector*);

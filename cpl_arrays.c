@@ -72,6 +72,11 @@ cpl_vector *cpl_vector_copy(cpl_vector *v) {
 	return u;
 }
 
+cpl_vector *cpl_vector_like(cpl_vector *v) {
+	cpl_vector *u = cpl_vector_alloc(cpl_vector_dim(v));
+	return u;
+}
+
 cpl_vector *cpl_vector_hot(int dim) {
 	cpl_vector *v = cpl_vector_alloc(dim);
 	for (int i = 1; i <= dim; ++i)
@@ -384,13 +389,12 @@ cpl_matrix *cpl_mmatrix_mult(cpl_matrix *M, cpl_matrix *N) {
 
 /* Row operations */
 
-cpl_vector *cpl_matrix_get_row(cpl_matrix *M, int i) {
-	cpl_vector *Mi = cpl_vector_alloc(cpl_matrix_cols(M));
+void cpl_matrix_get_row(cpl_matrix *M, int i, cpl_vector *v) {
+	cpl_check(cpl_vector_dim(v) == cpl_matrix_cols(M),
+			  "Size mismatch when getting row");
 
 	for (int j = 1; j <= cpl_matrix_cols(M); ++j)
-		cpl_vector_set(Mi, j, cpl_matrix_get(M, i, j));
-
-	return Mi;
+		cpl_vector_set(v, j, cpl_matrix_get(M, i, j));
 }
 
 void cpl_matrix_scale_row(cpl_matrix *M, int i, scalar c) {
