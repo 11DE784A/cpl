@@ -111,6 +111,14 @@ void cpl_vector_build(cpl_vector *v, ...) {
 	va_end(ap);
 }
 
+scalar cpl_vector_inner(cpl_vector *u, cpl_vector *v) {
+	scalar Σ = 0;
+	for (int i = 1; i <= cpl_vector_dim(u); ++i)
+		Σ += cpl_get(u, i) * cpl_get(v, i);
+
+	return Σ;
+}
+
 scalar cpl_vector_l2norm(cpl_vector *v) {
 	scalar Σ = 0;
 	for (int i = 1; i <= cpl_vector_dim(v); ++i)
@@ -130,9 +138,11 @@ scalar cpl_vector_l2dist(cpl_vector *u, cpl_vector *v) {
 	return sqrt(Σ);
 }
 
-void cpl_vector_scale(cpl_vector *v, scalar c) {
+cpl_vector *cpl_vector_scale(cpl_vector *v, scalar c) {
 	for (int i = 1; i <= cpl_vector_dim(v); ++i)
 		cpl_vector_set(v, i, c * cpl_vector_get(v, i));
+
+	return v;
 }
 
 cpl_vector *cpl_vector_push(cpl_vector *v, scalar vn) {
@@ -261,6 +271,13 @@ void cpl_matrix_overwrite(cpl_matrix *M, cpl_matrix *N) {
 		M->block->array[i] = N->block->array[i];
 }
 
+cpl_matrix *cpl_matrix_scale(cpl_matrix *M, scalar c) {
+	for (int i = 0; i < cpl_matrix_cols(M) * cpl_matrix_rows(M); ++i)
+		M->block->array[i] = c * M->block->array[i];
+
+	return M;
+}
+
 void cpl_matrix_print(cpl_matrix *M) {
 	printf("%dx%d matrix (" xstr(scalar) ")\n", cpl_matrix_rows(M), 
 												cpl_matrix_cols(M));
@@ -289,7 +306,61 @@ cpl_matrix *cpl_matrix_adjoint(cpl_matrix *M) {
 	return M_adj;
 }
 
-cpl_matrix *cpl_matrix_mult(cpl_matrix *M, cpl_matrix *N) {
+cpl_vector *cpl_vector_add(cpl_vector *u, cpl_vector *v) {
+	cpl_check(cpl_vector_dim(u) == cpl_vector_dim(v),
+			  "Size mismatch while trying to add vectors");
+
+	for (int i = 1; i <= cpl_vector_dim(u); ++i)
+		cpl_set(v, i, cpl_get(u, i) + cpl_get(v, i));
+
+	return v;
+}
+
+cpl_matrix *cpl_matrix_add(cpl_matrix *M, cpl_matrix *N) {
+	cpl_check(cpl_matrix_rows(M) == cpl_matrix_rows(N) 
+				&& cpl_matrix_cols(M) == cpl_matrix_cols(N),
+			  "Size mismatch while trying to add matrices");
+	for (int i = 1; i <= cpl_matrix_rows(N); ++i) {
+		for (int j = 1; j <= cpl_matrix_cols(N); ++j) {
+			cpl_set(N, i, j, cpl_get(M, i, j) + cpl_get(N, i, j));
+		}
+	}
+
+	return N;
+}
+
+cpl_vector *cpl_mvector_mult_alloc(cpl_matrix *M, cpl_vector *v) {
+	cpl_vector *Mv = cpl_vector_alloc(cpl_matrix_rows(M));
+	for (int i = 1; i <= cpl_vector_dim(Mv); ++i) {
+		scalar Mvi = 0;
+		for (int j = 1; j <= cpl_vector_dim(v); ++j)
+			Mvi += cpl_get(M, i, j) * cpl_get(v, j);
+		cpl_set(Mv, i, Mvi);
+	}
+
+	return Mv;
+}
+
+cpl_matrix *cpl_mmatrix_mult_alloc(cpl_matrix *M, cpl_matrix *N) {
+	cpl_matrix *MN = cpl_matrix_alloc(cpl_matrix_rows(M), cpl_matrix_cols(N));
+	for (int i = 1; i <= cpl_matrix_rows(MN); ++i) {
+		for (int j = 1; j <= cpl_matrix_cols(MN); ++j) {
+			scalar MNij = 0;
+			for (int k = 1; k <= cpl_matrix_cols(M); ++k)
+				MNij += cpl_get(M, i, k) * cpl_get(N, k, j);
+
+			cpl_set(MN, i, j, MNij);
+		}
+	}
+
+	return MN;
+}
+
+cpl_vector *cpl_mvector_mult(cpl_matrix *M, cpl_vector *v) {
+	return v;
+}
+
+cpl_matrix *cpl_mmatrix_mult(cpl_matrix *M, cpl_matrix *N) {
 	cpl_check(cpl_matrix_cols(M) == cpl_matrix_rows(N),
 			  "Dimension mismatch in matrix multiplication");
 
@@ -343,4 +414,9 @@ int cpl_matrix_swap_rows(cpl_matrix *M, int i, int j) {
 void cpl_matrix_add_to_row(cpl_matrix *M, int i, cpl_vector *v) {
 	for (int j = 1; j <= cpl_matrix_cols(M); ++j)
 		cpl_matrix_set(M, i, j, cpl_vector_get(v, j) + cpl_matrix_get(M, i, j));
+}
+
+/* For matrices generated on the fly */
+scalar cpl_func_get(scalar (*func)(int, int), int i, int j) {
+	return func(i, j);
 }

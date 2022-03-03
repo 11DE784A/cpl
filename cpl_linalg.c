@@ -182,3 +182,36 @@ int cpl_linalg_seidel(cpl_matrix *U, cpl_matrix *B, cpl_matrix *X) {
 	return iter;
 }
 
+void cpl_linalg_conjgrad(cpl_matrix *U, cpl_vector *b, cpl_vector *x) {
+	int dim = cpl_vector_dim(x);
+
+	cpl_vector *r = cpl_add(b, cpl_scale(cpl_mult_alloc(U, x), -1));
+	cpl_vector *d = cpl_vector_copy(r);
+
+	scalar rold = cpl_vector_inner(r, r);
+	scalar alpha, rnew;
+
+	for (int i = 1; i <= dim; ++i) {
+		cpl_vector *Ud = cpl_mult_alloc(U, d);
+		alpha = rold / cpl_vector_inner(d, Ud);
+		for (int j = 1; j <= dim; ++j) {
+			cpl_set(x, j, cpl_get(x, j) + alpha * cpl_get(d, j));
+			cpl_set(r, j, cpl_get(r, j) - alpha * cpl_get(Ud, j));
+		}
+
+		cpl_free(Ud);
+
+		rnew = cpl_vector_inner(r, r);
+		if (rnew < TOL) break;
+
+
+		for (int j = 1; j <= dim; ++j)
+			cpl_set(d, j, cpl_get(r, j) + (rnew / rold) * cpl_get(d, j));
+
+		rold = rnew;
+	}
+
+	cpl_free(r);
+	cpl_free(d);
+}
+

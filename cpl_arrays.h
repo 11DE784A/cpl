@@ -34,10 +34,11 @@ scalar cpl_vector_set(cpl_vector*, int, scalar);
 void cpl_vector_build(cpl_vector*, ...);
 void cpl_vector_overwrite(cpl_vector*, cpl_vector*);
 
+scalar cpl_vector_inner(cpl_vector*, cpl_vector*);
 scalar cpl_vector_l2norm(cpl_vector*);
 scalar cpl_vector_l2dist(cpl_vector*, cpl_vector*);
 
-void cpl_vector_scale(cpl_vector*, scalar);
+cpl_vector *cpl_vector_scale(cpl_vector*, scalar);
 
 cpl_vector *cpl_vector_push(cpl_vector*, scalar);
 scalar cpl_vector_pop(cpl_vector*);
@@ -68,6 +69,8 @@ int cpl_matrix_cols(cpl_matrix*);
 
 int cpl_matrix_issquare(cpl_matrix*);
 
+cpl_matrix *cpl_matrix_scale(cpl_matrix*, scalar);
+
 cpl_vector *cpl_matrix_get_row(cpl_matrix*, int);
 void cpl_matrix_scale_row(cpl_matrix*, int, scalar);
 int cpl_matrix_swap_rows(cpl_matrix*, int ,int);
@@ -75,14 +78,27 @@ void cpl_matrix_add_to_row(cpl_matrix*, int, cpl_vector*);
 
 void cpl_matrix_print(cpl_matrix*);
 
+/* Matrix algebra */
+
+cpl_vector *cpl_vector_add(cpl_vector*, cpl_vector*);
+cpl_matrix *cpl_matrix_add(cpl_matrix*, cpl_matrix*);
+
 cpl_matrix *cpl_matrix_adjoint(cpl_matrix*);
-cpl_matrix *cpl_matrix_mult(cpl_matrix*, cpl_matrix*);
+cpl_vector *cpl_mvector_mult_alloc(cpl_matrix*, cpl_vector*);
+cpl_matrix *cpl_mmatrix_mult_alloc(cpl_matrix*, cpl_matrix*);
+cpl_vector *cpl_mvector_mult(cpl_matrix*, cpl_vector*);
+cpl_matrix *cpl_mmatrix_mult(cpl_matrix*, cpl_matrix*);
+
+/* For matrices generated on the fly */
+
+scalar cpl_func_get(scalar (*)(int, int), int, int);
 
 /* Generics */
 
 #define cpl_get(X, ...) _Generic((X), \
 	cpl_vector*: cpl_vector_get, \
-	cpl_matrix*: cpl_matrix_get  \
+	cpl_matrix*: cpl_matrix_get, \
+	scalar (*)(int, int): cpl_func_get \
 )(X, __VA_ARGS__)
 
 #define cpl_set(X, ...) _Generic((X), \
@@ -101,3 +117,28 @@ cpl_matrix *cpl_matrix_mult(cpl_matrix*, cpl_matrix*);
 	cpl_matrix*: cpl_matrix_free, \
 	cpl_block*: cpl_block_free \
 )(X)
+
+#define cpl_overwrite(X, Y) _Generic ((X), \
+	cpl_vector*: cpl_vector_overwrite, \
+	cpl_matrix*: cpl_matrix_overwrite \
+)(X, Y)
+
+#define cpl_scale(X, c) _Generic ((X), \
+	cpl_vector*: cpl_vector_scale, \
+	cpl_matrix*: cpl_matrix_scale \
+)(X, c)
+
+#define cpl_add(X, Y) _Generic ((X), \
+	cpl_vector*: cpl_vector_add, \
+	cpl_matrix*: cpl_matrix_add \
+)(X, Y);
+
+#define cpl_mult(X, Y) _Generic ((Y), \
+	cpl_vector*: cpl_mvector_mult, \
+	cpl_matrix*: cpl_mmatrix_mult \
+)(X, Y)
+
+#define cpl_mult_alloc(X, Y) _Generic((Y), \
+	cpl_vector*: cpl_mvector_mult_alloc, \
+	cpl_matrix*: cpl_mmatrix_mult_alloc \
+)(X, Y)
