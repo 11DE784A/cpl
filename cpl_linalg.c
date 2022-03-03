@@ -11,14 +11,18 @@ cpl_matrix *cpl_linalg_gaussjordan(cpl_matrix *U, cpl_matrix *B) {
 
 	cpl_check(cpl_matrix_issquare(U),
 			  "Matrix passed to cpl_linalg_gaussjordan should be square");
-
-	cpl_matrix *V = cpl_matrix_copy(U);
-
 	cpl_check(cpl_matrix_rows(U) == cpl_matrix_rows(B),
 			  "UX = B is not a well defined system");
 
-	int swaps = 0;
+	cpl_matrix *V = cpl_matrix_copy(U);
 
+	cpl_vector *v = cpl_vector_alloc(cpl_matrix_cols(V));
+	cpl_vector *v_copy = cpl_vector_like(v);
+
+	cpl_vector *x = cpl_vector_alloc(cpl_matrix_cols(B));
+	cpl_vector *x_copy = cpl_vector_like(x);
+
+	int swaps = 0;
 	for (int j = 1; j <= cpl_matrix_cols(V); ++j) {
 		for (int i = j; i <= cpl_matrix_rows(V); ++i) {
 			scalar Vij = cpl_get(V, i, j);
@@ -32,33 +36,37 @@ cpl_matrix *cpl_linalg_gaussjordan(cpl_matrix *U, cpl_matrix *B) {
 				break;
 
 			} else if (i == cpl_matrix_rows(V)) {
-				cpl_free(B);
+				cpl_free(x_copy);
+				cpl_free(x);
+				cpl_free(v_copy);
+				cpl_free(v);
 				cpl_free(V);
+				cpl_free(B);
 				return NULL;
 			}
 		}
 
-		cpl_vector *v = cpl_matrix_get_row(V, j);
-		cpl_vector *x = cpl_matrix_get_row(B, j);
+		cpl_matrix_get_row(V, j, v);
+		cpl_matrix_get_row(B, j, x);
+
 		for (int i = 1; i <= cpl_matrix_rows(V); ++i) {
 			scalar Vij = cpl_get(V, i, j);
 			if (Vij == 0.0 || i == j) continue;
 
-			cpl_vector *v_copy = cpl_vector_copy(v);
+			cpl_vector_overwrite(v_copy, v);
 			cpl_vector_scale(v_copy, -Vij);
 			cpl_matrix_add_to_row(V, i, v_copy);
-			cpl_free(v_copy);
 
-			cpl_vector *x_copy = cpl_vector_copy(x);
+			cpl_vector_overwrite(x_copy, x);
 			cpl_vector_scale(x_copy, -Vij);
 			cpl_matrix_add_to_row(B, i, x_copy);
-			cpl_free(x_copy);
 		}
-
-		cpl_free(v);
-		cpl_free(x);
 	}
 
+	cpl_free(x_copy);
+	cpl_free(x);
+	cpl_free(v_copy);
+	cpl_free(v);
 	cpl_free(V);
 
 	return B;
