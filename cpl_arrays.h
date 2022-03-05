@@ -26,12 +26,14 @@ cpl_vector *cpl_vector_like(cpl_vector*);
 void cpl_vector_free(cpl_vector*);
 
 cpl_vector *cpl_vector_hot(int);
+cpl_vector *cpl_vector_1hot(int, int);
 
 int cpl_vector_size(cpl_vector*);
 int cpl_vector_dim(cpl_vector*);
 
 scalar cpl_vector_get(cpl_vector*, int);
 scalar cpl_vector_set(cpl_vector*, int, scalar);
+void cpl_vector_set_all(cpl_vector*, scalar);
 void cpl_vector_build(cpl_vector*, ...);
 void cpl_vector_overwrite(cpl_vector*, cpl_vector*);
 
@@ -62,6 +64,7 @@ cpl_matrix *cpl_matrix_id(int);
 
 scalar cpl_matrix_get(cpl_matrix*, int, int);
 scalar cpl_matrix_set(cpl_matrix*, int, int, scalar);
+void cpl_matrix_set_all(cpl_matrix*, scalar);
 void cpl_matrix_build(cpl_matrix*, ...);
 void cpl_matrix_overwrite(cpl_matrix*, cpl_matrix*);
 
@@ -76,6 +79,8 @@ void cpl_matrix_get_row(cpl_matrix*, int, cpl_vector*);
 void cpl_matrix_scale_row(cpl_matrix*, int, scalar);
 int cpl_matrix_swap_rows(cpl_matrix*, int ,int);
 void cpl_matrix_add_to_row(cpl_matrix*, int, cpl_vector*);
+
+void cpl_matrix_get_col(cpl_matrix*, int, cpl_vector*);
 
 void cpl_matrix_print(cpl_matrix*);
 

@@ -85,6 +85,13 @@ cpl_vector *cpl_vector_hot(int dim) {
 	return v;
 }
 
+cpl_vector *cpl_vector_1hot(int dim, int i) {
+	cpl_vector *v = cpl_vector_calloc(dim);
+	cpl_vector_set(v, i, 1.0);
+
+	return v;
+}
+
 int cpl_vector_dim(cpl_vector *v) {
 	return v->dim;
 }
@@ -105,6 +112,11 @@ scalar cpl_vector_set(cpl_vector *v, int i, scalar vi) {
 
 	v->block->array[i - 1] = vi;
 	return vi;
+}
+
+void cpl_vector_set_all(cpl_vector *v, scalar c) {
+	for (int i = 0; i < v->block->size; ++i)
+		v->block->array[i] = c;
 }
 
 void cpl_vector_build(cpl_vector *v, ...) {
@@ -258,6 +270,11 @@ scalar cpl_matrix_set(cpl_matrix *M, int i, int j, scalar Mij) {
 	return Mij;
 }
 
+void cpl_matrix_set_all(cpl_matrix *M, scalar c) {
+	for (int i = 0; i < M->block->size; ++i)
+		M->block->array[i] = c;
+}
+
 void cpl_matrix_build(cpl_matrix *M, ...) {
 	va_list ap;
 	va_start(ap, M);
@@ -387,7 +404,7 @@ cpl_matrix *cpl_mmatrix_mult(cpl_matrix *M, cpl_matrix *N) {
 	return M;
 }
 
-/* Row operations */
+/* Row & Column operations */
 
 void cpl_matrix_get_row(cpl_matrix *M, int i, cpl_vector *v) {
 	cpl_check(cpl_vector_dim(v) == cpl_matrix_cols(M),
@@ -418,6 +435,14 @@ int cpl_matrix_swap_rows(cpl_matrix *M, int i, int j) {
 void cpl_matrix_add_to_row(cpl_matrix *M, int i, cpl_vector *v) {
 	for (int j = 1; j <= cpl_matrix_cols(M); ++j)
 		cpl_matrix_set(M, i, j, cpl_vector_get(v, j) + cpl_matrix_get(M, i, j));
+}
+
+void cpl_matrix_get_col(cpl_matrix *M, int i, cpl_vector *v) {
+	cpl_check(cpl_vector_dim(v) == cpl_matrix_rows(M),
+			  "Size mismatch when getting column");
+
+	for (int j = 1; j <= cpl_matrix_rows(M); ++j)
+		cpl_vector_set(v, j, cpl_matrix_get(M, j, i));
 }
 
 /* For matrices generated on the fly */
