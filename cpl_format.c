@@ -22,7 +22,7 @@ void strfsecs(char *str, double secs) {
 void strfbytes(char *str, int bytes) {
 	cpl_check(bytes >= 0, "Number of bytes should be positive");
 
-	int power = log2(bytes) / 10;
+	int power = bytes > 0 ? log2(bytes) / 10 : 0;
 	float fbytes = bytes / pow(1024, power);
 	sprintf(str, "%.4g %s", fbytes, BUNITS[power]);
 }
