@@ -10,13 +10,15 @@ The code is likely very bad and certainly very slow; please don't use it anywher
 - A rudimentary `cpl_tensor` struct that can be used to store vectors, matrices
   and tensors
 - Indices start from 1 in all interfaces to `cpl_tensor` objects
-- Matrix reduction methods: Gauss-Jordan, ~~LU decomposition, Cholesky, QR
-  decomposition, Jacobi iterations, Gauss-Siedel, Conjugate gradient, Minimal
-  residue (MRES), Generalized minimal residue (GMRES)~~
+- Matrix reduction methods: Gauss-Jordan, LU decomposition, Cholesky, ~~QR decomposition,~~ Jacobi iterations, Gauss-Siedel, ~~Conjugate gradient, Minimal residue (MRES), Generalized minimal residue (GMRES)~~
 - Literally no dependencies
 - Written by me
 
 ## TODO
+
+- [ ] Diagonal
+- [ ] Block diagonal
+- [ ] Orthogonal
 
 - [ ] Documentation
 - [ ] More robust error handling

@@ -39,6 +39,7 @@ void cpl_vector_overwrite(cpl_vector*, cpl_vector*);
 
 scalar cpl_vector_inner(cpl_vector*, cpl_vector*);
 scalar cpl_vector_l2norm(cpl_vector*);
+void cpl_vector_normalize(cpl_vector*);
 scalar cpl_vector_l2dist(cpl_vector*, cpl_vector*);
 
 cpl_vector *cpl_vector_scale(cpl_vector*, scalar);

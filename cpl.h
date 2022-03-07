@@ -4,4 +4,5 @@
 
 #include "cpl_arrays.h"
 #include "cpl_linalg.h"
+#include "cpl_eigen.h"
 

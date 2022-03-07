@@ -1,41 +1,35 @@
-#include "cpl_includes.h"
-#include "cpl_defines.h"
-
 #include "cpl.h"
 
+#include "cpl_bench.h"
+
 int main() {
-	int dim = 4;
-	cpl_tensor *A = cpl_matrix_alloc(dim, dim);
-	for (int i = 0; i < cpl_tensor_length(A); ++i)
-		A->array[i] = i+100;
+/**	int dim = 6;
 
-	cpl_matrix_print(A);
+	cpl_matrix *A = cpl_matrix_alloc(dim, dim);
+	cpl_matrix_build(A, 1.0, -1.0, 4.0, 0.0, 2.0, 9.0,
+						0.0, 5.0, -2.0, 7.0, 8.0, 4.0,
+						1.0, 0.0, 5.0, 7.0, 3.0, -2.0,
+						6.0, -1.0, 2.0, 3.0, 0.0, 8.0,
+						-4.0, 2.0, 0.0, 5.0, -5.0, 3.0,
+						0.0, 7.0, -1.0, 5.0, 4.0, -2.0);
+	cpl_print(A);
 
-	cpl_tensor *LU = cpl_linalg_ludecomp(A);
-	cpl_matrix_print(LU);
+	cpl_vector *b = cpl_vector_alloc(dim);
+	cpl_vector_build(b, -5.0/2, 2.0/3, 3.0, -4.0/3, -1.0/3, 5.0/3);
+	cpl_print(b);
 
-	cpl_tensor *L = cpl_matrix_id(dim);
+	cpl_matrix *B = cpl_matrix_alloc(dim, 1);
+	cpl_matrix_build(B, -5.0/2, 2.0/3, 3.0, -4.0/3, -1.0/3, 5.0/3);
+	cpl_print(B);
 
-	cpl_tensor *U = cpl_matrix_alloc(dim, dim);
-	cpl_tensor_set_all(U, 0);
+	time(cpl_linalg_gaussjordan(A, B));
+	cpl_print(B);
 
-	for (int i = 1; i <= dim; ++i) {
-		for (int j = 1; j <= dim; ++j) {
-			if (i <= j) {
-				cpl_tensor_set(U, i, j, cpl_tensor_get(LU, i, j));
-			} else {
-				cpl_tensor_set(L, i, j, cpl_tensor_get(LU, i, j));
-			}
-		}
-	}
+	time(cpl_linalg_lusolve(A, b));
+	cpl_print(b);
 
-	cpl_matrix_print(L);
-	cpl_matrix_print(U);
-
-	cpl_matrix_print(cpl_matrix_mult(L, U));
-
-	cpl_tensor_free(A);
-	cpl_tensor_free(LU);
+	scalar x = cpl_linalg_ludet(A);
+	printf("det: %g\n", x); **/
 
 	return 0;
 }

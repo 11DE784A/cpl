@@ -144,6 +144,12 @@ scalar cpl_vector_l2norm(cpl_vector *v) {
 	return sqrt(Σ);
 }
 
+void cpl_vector_normalize(cpl_vector *v) {
+	scalar norm = cpl_vector_l2norm(v);
+	for (int i = 1; i <= cpl_vector_dim(v); ++i)
+		cpl_set(v, i, cpl_get(v, i) / norm);
+}
+
 scalar cpl_vector_l2dist(cpl_vector *u, cpl_vector *v) {
 	cpl_check(cpl_vector_dim(u) == cpl_vector_dim(v),
 			  "Size mismatch for computing distance");
@@ -379,6 +385,20 @@ cpl_matrix *cpl_mmatrix_mult_alloc(cpl_matrix *M, cpl_matrix *N) {
 }
 
 cpl_vector *cpl_mvector_mult(cpl_matrix *M, cpl_vector *v) {
+	cpl_vector *v_copy = cpl_vector_copy(v);
+	v->dim = M->rows;
+	v->block = cpl_block_realloc(v->block, v->dim);
+
+	for (int i = 1; i <= cpl_vector_dim(v); ++i) {
+		scalar vi = 0;
+		for (int j = 1; j <= cpl_vector_dim(v_copy); ++j)
+			vi += cpl_matrix_get(M, i, j) * cpl_vector_get(v_copy, j);
+
+		cpl_vector_set(v, i, vi);
+	}
+
+	cpl_free(v_copy);
+
 	return v;
 }
 
@@ -386,20 +406,20 @@ cpl_matrix *cpl_mmatrix_mult(cpl_matrix *M, cpl_matrix *N) {
 	cpl_check(cpl_matrix_cols(M) == cpl_matrix_rows(N),
 			  "Dimension mismatch in matrix multiplication");
 
-	cpl_matrix *M_copy = cpl_matrix_copy(M);
-	M->cols = cpl_matrix_cols(N);
-	M->block = cpl_block_realloc(M->block, M->rows * M->cols);
+	cpl_matrix *N_copy = cpl_matrix_copy(N);
+	N->rows = cpl_matrix_rows(M);
+	N->block = cpl_block_realloc(N->block, N->rows * N->cols);
 
-	for (int i = 1; i <= cpl_matrix_rows(M); ++i) {
-		for (int j = 1; j <= cpl_matrix_cols(M); ++j) {
-			scalar Σ = 0;
-			for (int k = 1; k <= cpl_matrix_rows(N); ++k)
-				Σ += cpl_matrix_get(M_copy, i, k) * cpl_matrix_get(N, k, j);
-			cpl_matrix_set(M, i, j, Σ);
+	for (int i = 1; i <= cpl_matrix_rows(N); ++i) {
+		for (int j = 1; j <= cpl_matrix_cols(N); ++j) {
+			scalar Nij = 0;
+			for (int k = 1; k <= cpl_matrix_cols(M); ++k)
+				Nij += cpl_matrix_get(M, i, k) * cpl_matrix_get(N_copy, k, j);
+			cpl_set(N, i, j, Nij);
 		}
 	}
 
-	cpl_free(M_copy);
+	cpl_free(N_copy);
 
 	return M;
 }
