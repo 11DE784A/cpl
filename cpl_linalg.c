@@ -126,18 +126,95 @@ cpl_matrix *cpl_linalg_cholesky(cpl_matrix *A) {
 	return L;
 }
 
-int cpl_linalg_jacobi(cpl_matrix *U, cpl_matrix *B, cpl_matrix *X0) {
+void cpl_linalg_luseparate(cpl_matrix *LU, cpl_matrix *L, cpl_matrix *U) {
+	for (int i = 1; i <= cpl_matrix_rows(LU); ++i) {
+		for (int j = 1; j <= cpl_matrix_cols(LU); ++j) {
+			if (i == j) {
+				cpl_set(L, i, i, 1.0);
+				cpl_set(U, i, i, cpl_get(LU, i, i));
+			} else if (i < j) {
+				cpl_set(U, i, j, cpl_get(LU, i, j));
+				cpl_set(L, j, i, cpl_get(LU, j, i));
+			}
+		}
+	}
+}
+
+cpl_vector *cpl_linalg_backsub(cpl_matrix *U, cpl_vector *b) {
+	cpl_check(cpl_matrix_issquare(U) && cpl_matrix_cols(U) == cpl_vector_dim(b), 
+			  "Ux = b is not a well defined system");
+
+	int dim = cpl_vector_dim(b);
+	for (int i = dim; i >= 1; --i) {
+		scalar Uij_bj = 0;
+		for (int j = i + 1; j <= dim; ++j)
+			Uij_bj += cpl_get(U, i, j) * cpl_get(b, j);
+
+		cpl_set(b, i, (cpl_get(b, i) - Uij_bj) / cpl_get(U, i, i));
+	}
+
+	return b;
+}
+
+cpl_vector *cpl_linalg_forwardsub(cpl_matrix *L, cpl_vector *b) {
+	cpl_check(cpl_matrix_issquare(L) && cpl_matrix_cols(L) == cpl_vector_dim(b), 
+			  "Lx = b is not a well defined system");
+
+	int dim = cpl_vector_dim(b);
+	for (int i = 1; i <= dim; ++i) {
+		scalar Lij_bj = 0;
+		for (int j = 1; j <= i - 1; ++j)
+			Lij_bj += cpl_get(L, i, j) * cpl_get(b, j);
+
+		cpl_set(b, i, (cpl_get(b, i) - Lij_bj) / cpl_get(L, i, i));
+	}
+
+	return b;
+}
+
+cpl_vector *cpl_linalg_lusolve(cpl_matrix *A, cpl_vector *b) {
+	int dim = cpl_vector_dim(b);
+
+	cpl_matrix *LU = cpl_linalg_ludecomp(A);
+	cpl_matrix *L = cpl_matrix_calloc(dim, dim);
+	cpl_matrix *U = cpl_matrix_calloc(dim, dim);
+	cpl_linalg_luseparate(LU, L, U);
+	
+	cpl_linalg_forwardsub(L, b);
+	cpl_linalg_backsub(U, b);
+
+	cpl_free(U);
+	cpl_free(L);
+	cpl_free(LU);
+
+	return b;
+}
+
+scalar cpl_linalg_ludet(cpl_matrix *A) {
+	cpl_matrix *LU = cpl_linalg_ludecomp(A);
+
+	scalar det = 1.0;
+	for (int i = 1; i <= cpl_matrix_rows(A); ++i)
+		det *= cpl_get(LU, i, i);
+
+	cpl_free(LU);
+	return det;
+}
+
+/* Iterative methods */
+
+int cpl_linalg_jacobi(cpl_matrix *U, cpl_matrix *B, cpl_matrix *X0, cpl_vector *residues) {
 	cpl_matrix *X1 = cpl_matrix_copy(X0);
 
 	int iter = 0;
-	scalar residual = 1 / TOL;
-	while (residual > TOL) {
+	scalar residue = 1 / TOL;
+	while (residue > TOL) {
 		if (++iter > MAX_ITERS) {
 			fprintf(stderr, "Failed to converge after %d iterations", MAX_ITERS);
 			break;
 		}
 
-		residual = 0;
+		residue = 0;
 		for (int i = 1; i <= cpl_matrix_rows(X1); ++i) {
 			for (int j = 1; j <= cpl_matrix_cols(X1); ++j) {
 				scalar Uik_Xkj = 0;
@@ -147,10 +224,12 @@ int cpl_linalg_jacobi(cpl_matrix *U, cpl_matrix *B, cpl_matrix *X0) {
 				}
 
 				cpl_set(X1, i, j, (cpl_get(B, i, j) - Uik_Xkj) / cpl_get(U, i, i));
-				residual += sabs(cpl_get(X0, i, j) - cpl_get(X1, i, j));
+				residue += sabs(cpl_get(X0, i, j) - cpl_get(X1, i, j));
 				cpl_set(X0, i, j, cpl_get(X1, i, j));
 			}
 		}
+
+		if (residues != NULL) cpl_vector_push(residues, residue);
 	}
 
 	cpl_free(X1);
@@ -161,14 +240,14 @@ int cpl_linalg_jacobi(cpl_matrix *U, cpl_matrix *B, cpl_matrix *X0) {
 int cpl_linalg_seidel(cpl_matrix *U, cpl_matrix *B, cpl_matrix *X) {
 
 	int iter = 0;
-	scalar residual = 1 / TOL;
-	while (residual > TOL) {
+	scalar residue = 1 / TOL;
+	while (residue > TOL) {
 		if (++iter > MAX_ITERS) {
 			fprintf(stderr, "Failed to converge after %d iterations", MAX_ITERS);
 			break;
 		}
 
-		residual = 0;
+		residue = 0;
 		for (int i = 1; i <= cpl_matrix_rows(X); ++i) {
 			for (int j = 1; j <= cpl_matrix_cols(X); ++j) {
 				scalar Uik_Xkj_1 = 0;
@@ -181,7 +260,7 @@ int cpl_linalg_seidel(cpl_matrix *U, cpl_matrix *B, cpl_matrix *X) {
 
 				scalar Xij = (cpl_get(B, i, j) - Uik_Xkj_1 - Uik_Xkj_2) 
 															/ cpl_get(U, i, i);
-				residual += sabs(Xij - cpl_get(X, i, j));
+				residue += sabs(Xij - cpl_get(X, i, j));
 				cpl_set(X, i, j, Xij);
 			}
 		}
@@ -190,7 +269,7 @@ int cpl_linalg_seidel(cpl_matrix *U, cpl_matrix *B, cpl_matrix *X) {
 	return iter;
 }
 
-void cpl_linalg_conjgrad(cpl_matrix *U, cpl_vector *b, cpl_vector *x) {
+void cpl_linalg_conjgrad_solve(cpl_matrix *U, cpl_vector *b, cpl_vector *x) {
 	int dim = cpl_vector_dim(x);
 
 	cpl_vector *r = cpl_add(b, cpl_scale(cpl_mult_alloc(U, x), -1));
@@ -199,7 +278,7 @@ void cpl_linalg_conjgrad(cpl_matrix *U, cpl_vector *b, cpl_vector *x) {
 	scalar rold = cpl_vector_inner(r, r);
 	scalar alpha, rnew;
 
-	for (int i = 1; i <= dim; ++i) {
+	for (int i = 1; i <= MAX_ITERS; ++i) {
 		cpl_vector *Ud = cpl_mult_alloc(U, d);
 		alpha = rold / cpl_vector_inner(d, Ud);
 		for (int j = 1; j <= dim; ++j) {
@@ -210,7 +289,7 @@ void cpl_linalg_conjgrad(cpl_matrix *U, cpl_vector *b, cpl_vector *x) {
 		cpl_free(Ud);
 
 		rnew = cpl_vector_inner(r, r);
-		if (rnew < TOL) break;
+		if (sqrt(rnew) < 1e-4) { printf("break after %d iters\n", i); break; }
 
 
 		for (int j = 1; j <= dim; ++j)
@@ -221,5 +300,28 @@ void cpl_linalg_conjgrad(cpl_matrix *U, cpl_vector *b, cpl_vector *x) {
 
 	cpl_free(r);
 	cpl_free(d);
+}
+
+void cpl_linalg_conjgrad(cpl_matrix *U, cpl_matrix *B, cpl_matrix *X) {
+	cpl_check(cpl_matrix_issquare(U), "Matrix U should be square");
+	cpl_check(cpl_matrix_cols(U) == cpl_matrix_rows(X) 
+				&& cpl_matrix_rows(U) == cpl_matrix_rows(B)
+				&& cpl_matrix_cols(B) == cpl_matrix_cols(X),
+			  "UX = B is not a well defined system");
+
+	int dim = cpl_matrix_cols(U);
+	cpl_vector *b = cpl_vector_alloc(dim);
+	cpl_vector *x = cpl_vector_calloc(dim);
+
+	for (int j = 1; j <= cpl_matrix_cols(B); ++j) {
+		cpl_matrix_get_col(B, j, b);
+		cpl_matrix_get_col(X, j, x);
+		cpl_linalg_conjgrad_solve(U, b, x);
+		for (int i = 1; i <= dim; ++i)
+			cpl_set(X, i, j, cpl_get(x, i));
+	}
+
+	cpl_free(x);
+	cpl_free(b);
 }
 
