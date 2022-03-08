@@ -91,10 +91,11 @@ cpl_vector *cpl_vector_add(cpl_vector*, cpl_vector*);
 cpl_matrix *cpl_matrix_add(cpl_matrix*, cpl_matrix*);
 
 cpl_matrix *cpl_matrix_adjoint(cpl_matrix*);
-cpl_vector *cpl_mvector_mult_alloc(cpl_matrix*, cpl_vector*);
-cpl_matrix *cpl_mmatrix_mult_alloc(cpl_matrix*, cpl_matrix*);
 cpl_vector *cpl_mvector_mult(cpl_matrix*, cpl_vector*);
 cpl_matrix *cpl_mmatrix_mult(cpl_matrix*, cpl_matrix*);
+void cpl_mvector_mult_overwrite(cpl_matrix*, cpl_vector*, cpl_vector*);
+cpl_vector *cpl_mvector_mult_alloc(cpl_matrix*, cpl_vector*);
+cpl_matrix *cpl_mmatrix_mult_alloc(cpl_matrix*, cpl_matrix*);
 
 /* For matrices generated on the fly */
 
@@ -149,3 +150,8 @@ scalar cpl_func_get(scalar (*)(int, int), int, int);
 	cpl_vector*: cpl_mvector_mult_alloc, \
 	cpl_matrix*: cpl_mmatrix_mult_alloc \
 )(X, Y)
+
+#define cpl_mult_overwrite(X, Y, Z) _Generic((Y), \
+	cpl_vector*: cpl_mvector_mult_overwrite \
+)(X, Y, Z)
+

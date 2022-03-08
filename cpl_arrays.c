@@ -357,6 +357,15 @@ cpl_matrix *cpl_matrix_add(cpl_matrix *M, cpl_matrix *N) {
 	return N;
 }
 
+void cpl_mvector_mult_overwrite(cpl_matrix *M, cpl_vector *v, cpl_vector *x) {
+	for (int i = 1; i <= cpl_vector_dim(x); ++i) {
+		scalar xi = 0;
+		for (int j = 1; j <= cpl_vector_dim(v); ++j)
+			xi += cpl_get(M, i, j) * cpl_get(v, j);
+		cpl_set(x, i, xi);
+	}
+}
+
 cpl_vector *cpl_mvector_mult_alloc(cpl_matrix *M, cpl_vector *v) {
 	cpl_vector *Mv = cpl_vector_alloc(cpl_matrix_rows(M));
 	for (int i = 1; i <= cpl_vector_dim(Mv); ++i) {
