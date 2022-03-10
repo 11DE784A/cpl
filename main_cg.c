@@ -44,17 +44,16 @@ int main() {
 						1.0, 2.0, -3.0,  13.0);
 	cpl_print(C);
 
-	cpl_vector *b = cpl_vector_alloc(dim);
-	cpl_vector_build(b, 1.0, 2.0, 2.0, 1.0);
+	cpl_matrix *id = cpl_matrix_id(dim);
+	cpl_matrix *Y = cpl_matrix_calloc(dim, dim);
+	cpl_linalg_conjgrad(C, id, Y);
 
-	cpl_print(b);
+	cpl_print(C);
+	cpl_print(id);
 
-	cpl_vector *x = cpl_vector_calloc(dim);
-	cpl_linalg_conjgrad_solve(C, b, x);
-	cpl_print(x);
+	cpl_matrix_set_all(Y, 0.0);
+	cpl_linalg_jacobi(C, id, Y, NULL);
 
-	cpl_mult(C, x);
-	cpl_print(x);
 
 	// Testing Jacobi
 	// cpl_print(A);
@@ -66,9 +65,8 @@ int main() {
 
 	// cpl_print(res);
 
-	// cpl_free(Y);
-	cpl_free(x);
-	cpl_free(b);
+	cpl_free(Y);
+	cpl_free(id);
 	cpl_free(C);
 	cpl_free(Ainv);
 	cpl_free(X);

@@ -1,0 +1,35 @@
+# Data for decay of voltage across an inductor in an RL circuit
+# V(t) = V0 exp(-At), where A=R/L
+# Determine best estimates for A, V0 and sigma_A, sigma_V0, cov(A,V0)
+# chi^2 / dof
+#time (ns)   voltage (volts)  uncertainty (volts)
+    0.0        5.08e+00        1.12e-01
+   32.8        3.29e+00        9.04e-02
+   65.6        2.23e+00        7.43e-02
+   98.4        1.48e+00        6.05e-02
+  131.2        1.11e+00        5.25e-02
+  164.0        6.44e-01        4.00e-02
+  196.8        4.76e-01        3.43e-02
+  229.6        2.73e-01        2.60e-02
+  262.4        1.88e-01        2.16e-02
+  295.2        1.41e-01        1.87e-02
+  328.0        9.42e-02        1.53e-02
+  360.8        7.68e-02        1.38e-02
+  393.6        3.22e-02        8.94e-03
+  426.4        3.22e-02        8.94e-03
+  459.2        1.98e-02        7.01e-03
+  492.0        1.98e-02        7.01e-03
+#
+# With time small nanoparticles of soot suspended in water start to
+# aggregate when salt is added. The average radius of aggregates "r"
+# varies with time "t" as r = r0 t^n. Determine best estimate for
+# r0, t, sigma_r0, sigma_t, cov(r0,t), chi^2 / dof
+#time (m)   size (nm)    error (nm)
+  0.12        115         10
+  0.18        130         12
+  0.42        202         14
+  0.90        335         18
+  2.10        510         20
+  6.00        890         30
+ 18.00       1700         40
+ 42.00       2600         50

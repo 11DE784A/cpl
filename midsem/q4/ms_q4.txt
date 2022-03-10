@@ -1,0 +1,8 @@
+Fit equation: log(A) = 4.885-0.2028t
+χ2 value for the fitting: 0.98477
+Covariance matrix for the fit:
+2x2 matrix (double)
+  0.08381 	-0.02031 	
+ -0.02031 	 0.005812	
+
+Average lifetime: 4.932 ± 0.376 seconds 

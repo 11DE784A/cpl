@@ -6,4 +6,5 @@
 #include "cpl_linalg.h"
 #include "cpl_eigen.h"
 #include "cpl_stats.h"
+#include "cpl_transform.h"
 

@@ -474,6 +474,30 @@ void cpl_matrix_get_col(cpl_matrix *M, int i, cpl_vector *v) {
 		cpl_vector_set(v, j, cpl_matrix_get(M, j, i));
 }
 
+cpl_matrix *cpl_matrix_loadtxt(char *fname, int start, int end, int cols) {
+	int rows = end - start + 1;
+	cpl_matrix *X = cpl_matrix_alloc(rows, cols);
+
+	float x; /* Replace with scalar ASAP */
+	char *item;
+	char line[MAXLINE];
+	FILE *fp = fopen(fname, "r");
+	for (int i = 1; i <= end; ++i) {
+		fgets(line, MAXLINE, fp);
+		if (start <= i) {
+			for (int j = 1; j <= cols; ++j) {
+				item = strtok(line, " ");
+				printf("%s\t", item);
+				sscanf(item, "%e", &x);
+				cpl_set(X, i - start + 1, j, x);
+			}
+			printf("\n");
+		}
+	}
+
+	return X;
+}
+
 /* For matrices generated on the fly */
 scalar cpl_func_get(scalar (*func)(int, int), int i, int j) {
 	return func(i, j);

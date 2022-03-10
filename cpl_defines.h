@@ -10,7 +10,9 @@
 #define sfmt % -#9.4g
 
 #define TOL 1e-6
+#define MAXLINE 150
 #define MAX_ITERS 20000
+#define PI 3.1415926535897
 
 #define sabs(x) _Generic((x), \
 	float: fabsf, \

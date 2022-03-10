@@ -1,3 +1,12 @@
+/* Scalar Tuple */
+typedef struct {
+	scalar first;
+	scalar second;
+	scalar third;
+	scalar fourth;
+	scalar fifth;
+	scalar sixth;
+} cpl_tuple;
 
 /* Blocks */
 
@@ -100,6 +109,8 @@ cpl_matrix *cpl_mmatrix_mult_alloc(cpl_matrix*, cpl_matrix*);
 /* For matrices generated on the fly */
 
 scalar cpl_func_get(scalar (*)(int, int), int, int);
+
+cpl_matrix *cpl_matrix_loadtxt(char *, int, int, int);
 
 /* Generics */
 

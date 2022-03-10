@@ -287,10 +287,8 @@ void cpl_linalg_conjgrad_solve(cpl_matrix *U, cpl_vector *b, cpl_vector *x) {
 			cpl_set(r, j, cpl_get(r, j) - alpha * cpl_get(Ud, j));
 		}
 
-
 		rnew = cpl_vector_inner(r, r);
-		if (sqrt(rnew) < 1e-4) { printf("break after %d iters\n", i); break; }
-
+		if (sqrt(rnew) < TOL) break;
 
 		for (int j = 1; j <= dim; ++j)
 			cpl_set(d, j, cpl_get(r, j) + (rnew / rold) * cpl_get(d, j));

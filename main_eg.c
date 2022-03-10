@@ -1,3 +1,5 @@
+#define CPL_COMPLEX
+
 #include "cpl.h"
 #include "cpl_bench.h"
 
@@ -12,6 +14,7 @@ int main() {
 						 0.0, -1.0,  0.0, -1.0,  4.0, -1.0,
 						 0.0,  0.0, -1.0,  0.0, -1.0,  4.0);
 
+	cpl_print(A);
 	cpl_vector *x = cpl_vector_calloc(dim);
 	cpl_vector_set(x, 1, 1.0);
 
