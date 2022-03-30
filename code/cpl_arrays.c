@@ -103,8 +103,9 @@ int cpl_vector_size(cpl_vector *v) {
 int cpl_vector_isequal(cpl_vector *u, cpl_vector *v) {
 	if (cpl_vector_dim(u) != cpl_vector_dim(v)) return 0;
 
-	for (int i = 1; i <= cpl_vector_dim(u); ++i) {
-		if (cpl_vector_get(u, i) != cpl_vector_get(v, i))
+	int size = cpl_vector_dim(u);
+	for (int i = 0; i < size; ++i) {
+		if (sabs(u->block->array[i] - v->block->array[i]) > TOL)
 			return 0;
 	}
 
@@ -278,7 +279,7 @@ int cpl_matrix_isequal(cpl_matrix *M, cpl_matrix *N) {
 
 	int size = cpl_matrix_rows(M) * cpl_matrix_cols(M);
 	for (int i = 0; i < size; ++i) {
-		if (M->block->array[i] != N->block->array[i])
+		if (sabs(M->block->array[i] - N->block->array[i]) > TOL)
 			return 0;
 	}
 
@@ -312,6 +313,17 @@ void cpl_matrix_build(cpl_matrix *M, ...) {
 		M->block->array[i] = va_arg(ap, scalar);
 
 	va_end(ap);
+}
+
+scalar cpl_matrix_l2dist(cpl_matrix *M, cpl_matrix *N) {
+	cpl_check(cpl_matrix_rows(M) == cpl_matrix_rows(N) 
+				&& cpl_matrix_cols(M) == cpl_matrix_cols(N), 
+			  "Size mismatch for computing distance");
+	scalar Σ = 0;
+	for (int i = 0; i < M->block->size; ++i)
+		Σ += pow(M->block->array[i] - M->block->array[i], 2);
+
+	return Σ;
 }
 
 void cpl_matrix_overwrite(cpl_matrix *M, cpl_matrix *N) {
@@ -498,13 +510,13 @@ void cpl_matrix_get_col(cpl_matrix *M, int i, cpl_vector *v) {
 		cpl_vector_set(v, j, cpl_matrix_get(M, j, i));
 }
 
-cpl_matrix *cpl_matrix_loadtxt(char *fname, int start, int end, int cols) {
+cpl_matrix *cpl_matrix_loadtxt(char *fpath, int start, int end, int cols) {
 	int rows = end - start + 1;
 	cpl_matrix *X = cpl_matrix_alloc(rows, cols);
 
 	float x; /* Replace with scalar ASAP */
 	char *item, line[MAXLINE];
-	FILE *fp = fopen(fname, "r");
+	FILE *fp = fopen(fpath, "r");
 	for (int i = 1; i <= end; ++i) {
 		fgets(line, MAXLINE, fp);
 		if (start <= i) {
@@ -518,6 +530,28 @@ cpl_matrix *cpl_matrix_loadtxt(char *fname, int start, int end, int cols) {
 	}
 
 	return X;
+}
+
+cpl_vector *cpl_vector_loadtxt(char *fpath, int start, int end, int col) {
+	int dim = end - start + 1;
+	cpl_vector *v = cpl_vector_alloc(dim);
+
+	float x;
+	char *item, line[MAXLINE];
+	FILE *fp = fopen(fpath, "r");
+	for (int i = 1; i <= end; ++i) {
+		fgets(line, MAXLINE, fp);
+		if (start <= i) {
+			item = strtok(line, " \t");
+			for (int j = 0; j < col - 1; ++j)
+				item = strtok(NULL, " \t");
+
+			sscanf(item, "%e", &x);
+			cpl_set(v, i - start + 1, x);
+		}
+	}
+
+	return v;
 }
 
 /* For matrices generated on the fly */

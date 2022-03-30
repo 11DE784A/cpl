@@ -79,6 +79,7 @@ scalar cpl_matrix_set(cpl_matrix*, int, int, scalar);
 void cpl_matrix_set_all(cpl_matrix*, scalar);
 void cpl_matrix_build(cpl_matrix*, ...);
 void cpl_matrix_overwrite(cpl_matrix*, cpl_matrix*);
+scalar cpl_matrix_l2dist(cpl_matrix*, cpl_matrix*);
 
 int cpl_matrix_rows(cpl_matrix*);
 int cpl_matrix_cols(cpl_matrix*);
@@ -114,6 +115,7 @@ cpl_matrix *cpl_mmatrix_mult_alloc(cpl_matrix*, cpl_matrix*);
 scalar cpl_func_get(scalar (*)(int, int), int, int);
 
 cpl_matrix *cpl_matrix_loadtxt(char *, int, int, int);
+cpl_vector *cpl_vector_loadtxt(char *, int, int, int);
 
 /* Generics */
 

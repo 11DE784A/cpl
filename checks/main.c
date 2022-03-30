@@ -216,6 +216,48 @@ START_TEST(test_matrices) {
 
 } END_TEST
 
+START_TEST(test_loadtxt) {
+	char fpath[30] = "data/linear_system.txt";
+
+	/* Vectors */
+	cpl_vector *u = cpl_vector_loadtxt(fpath, 2, 7, 3);
+	cpl_vector *v = cpl_vector_alloc(6);
+	cpl_vector_build(v, 0.0, 0.5, 1.5, 0.0, 0.0, 0.0);
+	ck_assert(cpl_vector_isequal(u, v));
+
+	cpl_free(v);
+	cpl_free(u);
+
+	u = cpl_vector_loadtxt(fpath, 11, 16, 1);
+	v = cpl_vector_alloc(6);
+	cpl_vector_build(v, -1.0, 0.0, 2.75, 2.5, -3.0, 2.0); 
+	ck_assert(cpl_vector_isequal(u, v));
+
+	cpl_free(v);
+	cpl_free(u);
+
+	/* Matrices */
+	cpl_matrix *A = cpl_matrix_loadtxt(fpath, 2, 7, 6);
+	cpl_matrix *B = cpl_matrix_alloc(6, 6);
+	cpl_matrix_build(B, -2.0,  0.0,  0.0, -1.0,  0.0,  0.5,
+						 0.0,  4.0,  0.5,  0.0,  1.0,  0.0,
+						 0.0,  0.5,  1.5,  0.0,  0.0,  0.0,
+						-1.0,  0.0,  0.0, -2.0,  0.0,  1.0,
+						 0.0,  1.0,  0.0,  0.0, -2.5,  0.0,
+						 0.5,  0.0,  0.0,  1.0,  0.0, -3.75);
+	ck_assert(cpl_matrix_isequal(A, B));
+
+	cpl_matrix *b = cpl_matrix_loadtxt(fpath, 11, 16, 1);
+	cpl_matrix *c = cpl_matrix_alloc(6, 1);
+	cpl_matrix_build(c, -1.0, 0.0, 2.75, 2.5, -3.0, 2.0); 
+	ck_assert(cpl_matrix_isequal(b, c));
+
+	cpl_free(c);
+	cpl_free(b);
+	cpl_free(B);
+	cpl_free(A);
+} END_TEST
+
 START_TEST(test_algebra) {
 	int dim = 6;
 
@@ -309,31 +351,108 @@ START_TEST(test_algebra) {
 
 } END_TEST
 
-START_TEST(test_loadtxt) {
-	cpl_matrix *A = cpl_matrix_loadtxt("linear_system.txt", 2, 7, 6);
-	cpl_matrix *B = cpl_matrix_alloc(6, 6);
-	cpl_matrix_build(B, -2.0,  0.0,  0.0, -1.0,  0.0,  0.5,
-						 0.0,  4.0,  0.5,  0.0,  1.0,  0.0,
-						 0.0,  0.5,  1.5,  0.0,  0.0,  0.0,
-						-1.0,  0.0,  0.0, -2.0,  0.0,  1.0,
-						 0.0,  1.0,  0.0,  0.0, -2.5,  0.0,
-						 0.5,  0.0,  0.0,  1.0,  0.0, -3.75);
-	ck_assert(cpl_matrix_isequal(A, B));
+START_TEST(test_addition) {
+	char fpath[30] = "data/addition.txt";
 
-	cpl_matrix *b = cpl_matrix_loadtxt("linear_system.txt", 11, 16, 1);
-	cpl_matrix *c = cpl_matrix_alloc(6, 1);
-	cpl_matrix_build(c, -1.0, 0.0, 2.75, 2.5, -3.0, 2.0); 
-	ck_assert(cpl_matrix_isequal(b, c));
+	/* Vectors */
+	cpl_vector *u, *v, *w;
+	u = cpl_vector_loadtxt(fpath, 4, 9, 1);
+	v = cpl_vector_loadtxt(fpath, 12, 17, 1);
+	cpl_add(u, v);
 
-	cpl_free(c);
-	cpl_free(b);
+	w = cpl_vector_loadtxt(fpath, 20, 25, 1);
+	ck_assert(cpl_vector_isequal(w, v));
+
+	cpl_free(w);
+	cpl_free(v);
+	cpl_free(u);
+
+	/* Square Matrices */
+	cpl_matrix *A, *B, *C;
+	A = cpl_matrix_loadtxt(fpath, 30, 35, 6);
+	B = cpl_matrix_loadtxt(fpath, 38, 43, 6);
+	cpl_add(A, B);
+
+	C = cpl_matrix_loadtxt(fpath, 46, 51, 6);
+	ck_assert(cpl_matrix_isequal(C, B));
+
+	cpl_free(C);
 	cpl_free(B);
 	cpl_free(A);
+
+	/* Tall Matrices */
+	A = cpl_matrix_loadtxt(fpath, 56, 63, 6);
+	B = cpl_matrix_loadtxt(fpath, 66, 73, 6);
+	cpl_add(A, B);
+
+	C = cpl_matrix_loadtxt(fpath, 76, 83, 6);
+	ck_assert(cpl_matrix_isequal(C, B));
+
+	cpl_free(C);
+	cpl_free(B);
+	cpl_free(A);
+
+} END_TEST
+
+START_TEST(test_mult) {
+	char fpath[30] = "data/multiplication.txt";
+
+	/* Matrix-Vector */
+	cpl_matrix *A = cpl_matrix_loadtxt(fpath, 4, 9, 8);
+	cpl_vector *v = cpl_vector_loadtxt(fpath, 12, 19, 1);
+	cpl_vector *Av = cpl_vector_loadtxt(fpath, 22, 27, 1);
+
+	cpl_vector *Av_calc = cpl_mult_alloc(A, v);
+	ck_assert(cpl_vector_isequal(Av_calc, Av));
+
+	cpl_mult_overwrite(A, v, Av_calc);
+	ck_assert(cpl_vector_isequal(Av_calc, Av));
+
+	cpl_mult(A, v);
+	ck_assert(cpl_vector_isequal(v, Av));
+
+	cpl_free(Av_calc);
+	cpl_free(Av);
+	cpl_free(v);
+	cpl_free(A);
+
+	/* Matrix-Matrix */
+	A = cpl_matrix_loadtxt(fpath, 32, 37, 8);
+	cpl_matrix *B = cpl_matrix_loadtxt(fpath, 40, 47, 7);
+	cpl_matrix *AB = cpl_matrix_loadtxt(fpath, 50, 55, 7);
+
+	cpl_matrix *AB_calc = cpl_mult_alloc(A, B);
+	ck_assert(cpl_matrix_isequal(AB_calc, AB));
+
+	cpl_mult(A, B);
+	ck_assert(cpl_matrix_isequal(B, AB));
+
+	cpl_free(AB_calc);
+	cpl_free(AB);
+	cpl_free(B);
+	cpl_free(A);
+
+	/* Vector-Matrix */
+	cpl_matrix *u = cpl_matrix_loadtxt(fpath, 60, 67, 1);
+	cpl_matrix *wT = cpl_matrix_loadtxt(fpath, 70, 70, 6);
+	cpl_matrix *uwT = cpl_matrix_loadtxt(fpath, 73, 80, 6);
+
+	cpl_matrix *uwT_calc = cpl_mult_alloc(u, wT);
+	ck_assert(cpl_matrix_isequal(uwT_calc, uwT));
+
+	cpl_mult(u, wT);
+	ck_assert(cpl_matrix_isequal(wT, uwT));
+
+	cpl_free(uwT_calc);
+	cpl_free(uwT);
+	cpl_free(wT);
+	cpl_free(u);
+
 } END_TEST
 
 Suite *array_suite(void) {
 	Suite *s;
-	TCase *tc_vectors, *tc_matrices, *tc_algebra, *tc_loadtxt;
+	TCase *tc_vectors, *tc_matrices, *tc_loadtxt, *tc_algebra;
 
 	s = suite_create("Arrays");
 
@@ -345,16 +464,18 @@ Suite *array_suite(void) {
 	tc_matrices = tcase_create("Matrices");
 	tcase_add_test(tc_matrices, test_matrices);
 
-	tc_algebra = tcase_create("Algebra");
-	tcase_add_test(tc_algebra, test_algebra);
-
 	tc_loadtxt = tcase_create("Loading Data");
 	tcase_add_test(tc_loadtxt, test_loadtxt);
 
+	tc_algebra = tcase_create("Algebra");
+	tcase_add_test(tc_algebra, test_algebra);
+	tcase_add_test(tc_algebra, test_addition);
+	tcase_add_test(tc_algebra, test_mult);
+
 	suite_add_tcase(s, tc_vectors);
 	suite_add_tcase(s, tc_matrices);
-	suite_add_tcase(s, tc_algebra);
 	suite_add_tcase(s, tc_loadtxt);
+	suite_add_tcase(s, tc_algebra);
 
 	return s;
 }
