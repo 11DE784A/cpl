@@ -309,9 +309,31 @@ START_TEST(test_algebra) {
 
 } END_TEST
 
+START_TEST(test_loadtxt) {
+	cpl_matrix *A = cpl_matrix_loadtxt("linear_system.txt", 2, 7, 6);
+	cpl_matrix *B = cpl_matrix_alloc(6, 6);
+	cpl_matrix_build(B, -2.0,  0.0,  0.0, -1.0,  0.0,  0.5,
+						 0.0,  4.0,  0.5,  0.0,  1.0,  0.0,
+						 0.0,  0.5,  1.5,  0.0,  0.0,  0.0,
+						-1.0,  0.0,  0.0, -2.0,  0.0,  1.0,
+						 0.0,  1.0,  0.0,  0.0, -2.5,  0.0,
+						 0.5,  0.0,  0.0,  1.0,  0.0, -3.75);
+	ck_assert(cpl_matrix_isequal(A, B));
+
+	cpl_matrix *b = cpl_matrix_loadtxt("linear_system.txt", 11, 16, 1);
+	cpl_matrix *c = cpl_matrix_alloc(6, 1);
+	cpl_matrix_build(c, -1.0, 0.0, 2.75, 2.5, -3.0, 2.0); 
+	ck_assert(cpl_matrix_isequal(b, c));
+
+	cpl_free(c);
+	cpl_free(b);
+	cpl_free(B);
+	cpl_free(A);
+} END_TEST
+
 Suite *array_suite(void) {
 	Suite *s;
-	TCase *tc_vectors, *tc_matrices, *tc_algebra;
+	TCase *tc_vectors, *tc_matrices, *tc_algebra, *tc_loadtxt;
 
 	s = suite_create("Arrays");
 
@@ -326,9 +348,13 @@ Suite *array_suite(void) {
 	tc_algebra = tcase_create("Algebra");
 	tcase_add_test(tc_algebra, test_algebra);
 
+	tc_loadtxt = tcase_create("Loading Data");
+	tcase_add_test(tc_loadtxt, test_loadtxt);
+
 	suite_add_tcase(s, tc_vectors);
 	suite_add_tcase(s, tc_matrices);
 	suite_add_tcase(s, tc_algebra);
+	suite_add_tcase(s, tc_loadtxt);
 
 	return s;
 }

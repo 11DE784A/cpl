@@ -40,6 +40,8 @@ cpl_vector *cpl_vector_1hot(int, int);
 int cpl_vector_size(cpl_vector*);
 int cpl_vector_dim(cpl_vector*);
 
+int cpl_vector_isequal(cpl_vector*, cpl_vector*);
+
 scalar cpl_vector_get(cpl_vector*, int);
 scalar cpl_vector_set(cpl_vector*, int, scalar);
 void cpl_vector_set_all(cpl_vector*, scalar);
@@ -82,6 +84,7 @@ int cpl_matrix_rows(cpl_matrix*);
 int cpl_matrix_cols(cpl_matrix*);
 
 int cpl_matrix_issquare(cpl_matrix*);
+int cpl_matrix_isequal(cpl_matrix*, cpl_matrix*);
 
 cpl_matrix *cpl_matrix_scale(cpl_matrix*, scalar);
 

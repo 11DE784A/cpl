@@ -100,6 +100,17 @@ int cpl_vector_size(cpl_vector *v) {
 	return v->block->size;
 }
 
+int cpl_vector_isequal(cpl_vector *u, cpl_vector *v) {
+	if (cpl_vector_dim(u) != cpl_vector_dim(v)) return 0;
+
+	for (int i = 1; i <= cpl_vector_dim(u); ++i) {
+		if (cpl_vector_get(u, i) != cpl_vector_get(v, i))
+			return 0;
+	}
+
+	return 1;
+}
+
 scalar cpl_vector_get(cpl_vector *v, int i) {
 	cpl_check(1 <= i && i <= cpl_vector_dim(v), 
 			  "Vector index out of bounds");
@@ -259,6 +270,19 @@ int cpl_matrix_cols(cpl_matrix *M) {
 
 int cpl_matrix_issquare(cpl_matrix *M) {
 	return cpl_matrix_rows(M) == cpl_matrix_cols(M);
+}
+
+int cpl_matrix_isequal(cpl_matrix *M, cpl_matrix *N) {
+	if (cpl_matrix_rows(M) != cpl_matrix_rows(N)
+			|| cpl_matrix_cols(M) != cpl_matrix_cols(N)) return 0;
+
+	int size = cpl_matrix_rows(M) * cpl_matrix_cols(M);
+	for (int i = 0; i < size; ++i) {
+		if (M->block->array[i] != N->block->array[i])
+			return 0;
+	}
+
+	return 1;
 }
 
 scalar cpl_matrix_get(cpl_matrix *M, int i, int j) {
@@ -479,19 +503,17 @@ cpl_matrix *cpl_matrix_loadtxt(char *fname, int start, int end, int cols) {
 	cpl_matrix *X = cpl_matrix_alloc(rows, cols);
 
 	float x; /* Replace with scalar ASAP */
-	char *item;
-	char line[MAXLINE];
+	char *item, line[MAXLINE];
 	FILE *fp = fopen(fname, "r");
 	for (int i = 1; i <= end; ++i) {
 		fgets(line, MAXLINE, fp);
 		if (start <= i) {
+			item = strtok(line, " \t");
 			for (int j = 1; j <= cols; ++j) {
-				item = strtok(line, " ");
-				printf("%s\t", item);
 				sscanf(item, "%e", &x);
 				cpl_set(X, i - start + 1, j, x);
+				item = strtok(NULL, " \t");
 			}
-			printf("\n");
 		}
 	}
 
