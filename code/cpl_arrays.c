@@ -510,6 +510,15 @@ void cpl_matrix_get_col(cpl_matrix *M, int i, cpl_vector *v) {
 		cpl_vector_set(v, j, cpl_matrix_get(M, j, i));
 }
 
+cpl_vector *cpl_matrix_flatten(cpl_matrix *M) {
+	int size = cpl_matrix_rows(M) * cpl_matrix_cols(M);
+	cpl_vector *v = cpl_vector_alloc(size);
+	for (int i = 0; i < size; ++i)
+		v->block->array[i] = M->block->array[i];
+
+	return v;
+}
+
 cpl_matrix *cpl_matrix_loadtxt(char *fpath, int start, int end, int cols) {
 	int rows = end - start + 1;
 	cpl_matrix *X = cpl_matrix_alloc(rows, cols);

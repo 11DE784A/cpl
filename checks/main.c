@@ -258,6 +258,21 @@ START_TEST(test_loadtxt) {
 	cpl_free(A);
 } END_TEST
 
+START_TEST(test_casting) {
+	/* Flattening matrices */
+	cpl_matrix *X = cpl_matrix_alloc(6, 1);
+	cpl_matrix_build(X, -1.0, 0.0, 2.75, 2.5, -3.0, 2.0); 
+
+	cpl_vector *x = cpl_matrix_flatten(X);
+	ck_assert(cpl_vector_dim(x) == cpl_matrix_rows(X));
+	for (int i = 1; i <= cpl_vector_dim(x); ++i)
+		ck_assert(cpl_get(x, i) == cpl_get(X, i, 1));
+
+	cpl_free(x);
+	cpl_free(X);
+
+} END_TEST
+
 START_TEST(test_algebra) {
 	int dim = 6;
 
@@ -468,6 +483,7 @@ Suite *array_suite(void) {
 	tcase_add_test(tc_loadtxt, test_loadtxt);
 
 	tc_algebra = tcase_create("Algebra");
+	tcase_add_test(tc_algebra, test_casting);
 	tcase_add_test(tc_algebra, test_algebra);
 	tcase_add_test(tc_algebra, test_addition);
 	tcase_add_test(tc_algebra, test_mult);

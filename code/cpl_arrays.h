@@ -95,6 +95,7 @@ int cpl_matrix_swap_rows(cpl_matrix*, int ,int);
 void cpl_matrix_add_to_row(cpl_matrix*, int, cpl_vector*);
 
 void cpl_matrix_get_col(cpl_matrix*, int, cpl_vector*);
+cpl_vector *cpl_matrix_flatten(cpl_matrix*);
 
 void cpl_matrix_print(cpl_matrix*);
 
