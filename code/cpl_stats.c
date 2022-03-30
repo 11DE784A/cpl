@@ -133,7 +133,7 @@ scalar cpl_stats_polyfit(int degree, cpl_vector *x, cpl_vector *y, cpl_vector *Ï
 	}
 
 	// Parameters
-	cpl_linalg_conjgrad_solve(A, b, params);
+	cpl_linalg_conjgrad_solve(A, b, params, NULL);
 
 	// Covariance matrix
 	cpl_matrix *id = cpl_matrix_id(degree + 1);

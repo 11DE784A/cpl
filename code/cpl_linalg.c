@@ -237,7 +237,7 @@ int cpl_linalg_jacobi(cpl_matrix *U, cpl_matrix *B, cpl_matrix *X0, cpl_vector *
 	return iter;
 }
 
-int cpl_linalg_seidel(cpl_matrix *U, cpl_matrix *B, cpl_matrix *X) {
+int cpl_linalg_seidel(cpl_matrix *U, cpl_matrix *B, cpl_matrix *X, cpl_vector *residues) {
 
 	int iter = 0;
 	scalar residue = 1 / TOL;
@@ -264,12 +264,14 @@ int cpl_linalg_seidel(cpl_matrix *U, cpl_matrix *B, cpl_matrix *X) {
 				cpl_set(X, i, j, Xij);
 			}
 		}
+
+		if (residues != NULL) cpl_vector_push(residues, residue);
 	}
 
 	return iter;
 }
 
-void cpl_linalg_conjgrad_solve(cpl_matrix *U, cpl_vector *b, cpl_vector *x) {
+void cpl_linalg_conjgrad_solve(cpl_matrix *U, cpl_vector *b, cpl_vector *x, cpl_vector *residues) {
 	int dim = cpl_vector_dim(x);
 
 	cpl_vector *r = cpl_add(b, cpl_scale(cpl_mult_alloc(U, x), -1));
@@ -288,6 +290,7 @@ void cpl_linalg_conjgrad_solve(cpl_matrix *U, cpl_vector *b, cpl_vector *x) {
 		}
 
 		rnew = cpl_vector_inner(r, r);
+		if (residues != NULL) cpl_vector_push(residues, rnew);
 		if (sqrt(rnew) < TOL) break;
 
 		for (int j = 1; j <= dim; ++j)
@@ -315,7 +318,7 @@ void cpl_linalg_conjgrad(cpl_matrix *U, cpl_matrix *B, cpl_matrix *X) {
 	for (int j = 1; j <= cpl_matrix_cols(B); ++j) {
 		cpl_matrix_get_col(B, j, b);
 		cpl_matrix_get_col(X, j, x);
-		cpl_linalg_conjgrad_solve(U, b, x);
+		cpl_linalg_conjgrad_solve(U, b, x, NULL);
 		for (int i = 1; i <= dim; ++i)
 			cpl_set(X, i, j, cpl_get(x, i));
 	}
