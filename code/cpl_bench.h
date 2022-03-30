@@ -4,7 +4,7 @@
 
 #include "cpl_format.h"
 
-#define time(process) \
+#define cpl_time(process) \
 	({clock_t _tstart = clock(); \
 	  int _nstart = NALLOC; \
 	  int _bstart = BALLOC; \
