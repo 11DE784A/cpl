@@ -13,6 +13,11 @@ void cpl_check(int cond, char* message) {
 	}
 }
 
+/* Delta function */
+int cpl_delta(int i, int j) {
+	return (i == j ? 1 : 0);
+}
+
 /* Random numbers */
 double cpl_rand() {
 	return (double) rand() / RAND_MAX;

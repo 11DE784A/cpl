@@ -567,3 +567,25 @@ cpl_vector *cpl_vector_loadtxt(char *fpath, int start, int end, int col) {
 scalar cpl_func_get(scalar (*func)(int, int), int i, int j) {
 	return func(i, j);
 }
+cpl_vector *cpl_mvfly_mult_alloc(scalar (*fn)(int, int), cpl_vector *v) {
+	int dim = cpl_vector_dim(v);
+
+	cpl_vector *w = cpl_vector_alloc(dim);
+	cpl_mvfly_mult_overwrite(fn, v, w);
+
+	return w;
+}
+
+cpl_vector *cpl_mvfly_mult_overwrite(scalar (*fn)(int, int), cpl_vector *v, cpl_vector *w) {
+	int dim = cpl_vector_dim(v);
+
+	scalar Σ;
+	for (int i = 1; i <= dim; ++i) {
+		Σ = 0;
+		for (int j = 1; j <= dim; ++j)
+			Σ += fn(i, j) * cpl_get(v, j);
+		cpl_set(w, i, Σ);
+	}
+
+	return w;
+}

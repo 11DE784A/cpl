@@ -114,6 +114,8 @@ cpl_matrix *cpl_mmatrix_mult_alloc(cpl_matrix*, cpl_matrix*);
 /* For matrices generated on the fly */
 
 scalar cpl_func_get(scalar (*)(int, int), int, int);
+cpl_vector *cpl_mvfly_mult_alloc(scalar (*)(int, int), cpl_vector*);
+cpl_vector *cpl_mvfly_mult_overwrite(scalar (*)(int, int), cpl_vector*, cpl_vector*);
 
 cpl_matrix *cpl_matrix_loadtxt(char *, int, int, int);
 cpl_vector *cpl_vector_loadtxt(char *, int, int, int);

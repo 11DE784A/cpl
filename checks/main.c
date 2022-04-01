@@ -465,6 +465,41 @@ START_TEST(test_mult) {
 
 } END_TEST
 
+/*
+ * mult_alloc, matrix*vector
+ * mult_overwrite, matrix*vector
+ */
+
+START_TEST(test_fly) {
+	int dim = 6;
+	char fpath[30] = "data/fly.txt";
+	cpl_matrix *A = cpl_matrix_loadtxt(fpath, 3, 8, 6);
+	cpl_vector *b = cpl_vector_loadtxt(fpath, 12, 17, 1);
+	cpl_vector *Ab = cpl_vector_loadtxt(fpath, 21, 26, 1);
+
+	scalar m = 0.2;
+	scalar A_fn (int i, int j) { 
+		return (cpl_delta(i + 1, j) + cpl_delta(i - 1, j)) / 2.0 
+				+ (m*m - 1) * cpl_delta(i, j); }
+
+	for (int i = 1; i <= dim; ++i) {
+		for (int j = 1; j <= dim; ++j)
+			ck_assert(sabs(A_fn(i, j) - cpl_get(A, i, j)) < TOL);
+	}
+
+	cpl_vector *Ab_calc = cpl_mvfly_mult_alloc(A_fn, b);
+	ck_assert(cpl_vector_isequal(Ab_calc, Ab));
+
+	cpl_mvfly_mult_overwrite(A_fn, b, Ab_calc);
+	ck_assert(cpl_vector_isequal(Ab_calc, Ab));
+
+	cpl_free(Ab_calc);
+	cpl_free(Ab);
+	cpl_free(b);
+	cpl_free(A);
+
+} END_TEST
+
 Suite *array_suite(void) {
 	Suite *s;
 	TCase *tc_vectors, *tc_matrices, *tc_loadtxt, *tc_algebra;
@@ -487,6 +522,7 @@ Suite *array_suite(void) {
 	tcase_add_test(tc_algebra, test_algebra);
 	tcase_add_test(tc_algebra, test_addition);
 	tcase_add_test(tc_algebra, test_mult);
+	tcase_add_test(tc_algebra, test_fly);
 
 	suite_add_tcase(s, tc_vectors);
 	suite_add_tcase(s, tc_matrices);
