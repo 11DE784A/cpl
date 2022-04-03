@@ -304,6 +304,40 @@ void cpl_linalg_conjgrad_solve(cpl_matrix *U, cpl_vector *b, cpl_vector *x, cpl_
 	cpl_free(Ud);
 }
 
+void cpl_linalg_conjgrad_fly(scalar (*U)(int, int), 
+							 cpl_vector *b, cpl_vector *x, cpl_vector *residues) {
+	int dim = cpl_vector_dim(x);
+
+	cpl_vector *r = cpl_add(b, cpl_scale(cpl_mvfly_mult_alloc(U, x), -1));
+	cpl_vector *d = cpl_vector_copy(r);
+	cpl_vector *Ud = cpl_vector_alloc(dim);
+
+	scalar rold = cpl_vector_inner(r, r);
+	scalar alpha, rnew;
+
+	for (int i = 1; i <= MAX_ITERS; ++i) {
+		cpl_mvfly_mult_overwrite(U, d, Ud);
+		alpha = rold / cpl_vector_inner(d, Ud);
+		for (int j = 1; j <= dim; ++j) {
+			cpl_set(x, j, cpl_get(x, j) + alpha * cpl_get(d, j));
+			cpl_set(r, j, cpl_get(r, j) - alpha * cpl_get(Ud, j));
+		}
+
+		rnew = cpl_vector_inner(r, r);
+		if (residues != NULL) cpl_vector_push(residues, rnew);
+		if (sqrt(rnew) < TOL) break;
+
+		for (int j = 1; j <= dim; ++j)
+			cpl_set(d, j, cpl_get(r, j) + (rnew / rold) * cpl_get(d, j));
+
+		rold = rnew;
+	}
+
+	cpl_free(r);
+	cpl_free(d);
+	cpl_free(Ud);
+}
+
 void cpl_linalg_conjgrad(cpl_matrix *U, cpl_matrix *B, cpl_matrix *X) {
 	cpl_check(cpl_matrix_issquare(U), "Matrix U should be square");
 	cpl_check(cpl_matrix_cols(U) == cpl_matrix_rows(X) 
