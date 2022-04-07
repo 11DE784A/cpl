@@ -114,7 +114,7 @@ int main() {
 		a = j / dim + 1;	b = j % dim;
 		x = i / dim + 1; 	y = i % dim;
 		Axy_ab = ((cpl_delta(x + μ, a) + cpl_delta(x - μ, a) - 2*cpl_delta(x, a)) * cpl_delta(y, b)
-				 + cpl_delta(x, a) * (cpl_delta(y + μ, b) + cpl_delta(y - μ, b) + 2*cpl_delta(y, b))) / 2
+				 + cpl_delta(x, a) * (cpl_delta(y + μ, b) + cpl_delta(y - μ, b) - 2*cpl_delta(y, b))) / 2.0
 				 + pow(m, 2) * cpl_delta(x, a) * cpl_delta(y, b);
 		return Axy_ab;
 	}
@@ -138,7 +138,6 @@ int main() {
 
 		printf("Column %d of the inverse:\n", i);
 		cpl_print(f);
-
 	}
 
 	printf("Residue versus iterations\n");
