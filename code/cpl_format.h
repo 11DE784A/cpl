@@ -2,7 +2,7 @@
 
 #define CPL_FORMAT
 
-#define FMTWIDTH 10
+#define FMTWIDTH 20
 
 void strfsecs(char*, double);
 void strfbytes(char*, int);
