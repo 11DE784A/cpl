@@ -108,14 +108,23 @@ int main() {
 
 	int μ = 1;
 	scalar m = 0.2;
-	scalar A_fn (int x, int y) {
-		return (cpl_delta(x + μ, y) + cpl_delta(x - μ, y)) / 2.0 
-				+ (m*m - 1) * cpl_delta(x, y); }
+	scalar A_fn (int i, int j) {
+		scalar Axy_ab;
+		int a, b, x, y;
+		a = j / dim + 1;	b = j % dim;
+		x = i / dim + 1; 	y = i % dim;
+		Axy_ab = ((cpl_delta(x + μ, a) + cpl_delta(x - μ, a) - 2*cpl_delta(x, a)) * cpl_delta(y, b)
+				 + cpl_delta(x, a) * (cpl_delta(y + μ, b) + cpl_delta(y - μ, b) + 2*cpl_delta(y, b))) / 2
+				 + pow(m, 2) * cpl_delta(x, a) * cpl_delta(y, b);
+		return Axy_ab;
+	}
 
 	int N = 3;
 
-	cpl_vector *e = cpl_vector_alloc(dim);
-	cpl_vector *f = cpl_vector_alloc(dim);
+	int size = dim * dim;
+
+	cpl_vector *e = cpl_vector_alloc(size);
+	cpl_vector *f = cpl_vector_alloc(size);
 	cpl_vector *res3 = cpl_vector_alloc(0);
 
 	printf("We will find the inverse column-by-column for %d columns\n\n", N);
