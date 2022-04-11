@@ -5,7 +5,7 @@ CC=gcc $(LINKS) $(CFLAGS)
 VPATH=../code
 
 OBJECTS=main.o cpl_arrays.o cpl_commons.o cpl_linalg.o cpl_format.o \
-		cpl_eigen.o cpl_stats.o
+		cpl_eigen.o cpl_stats.o cpl_random.o
 
 main: $(OBJECTS)
 	$(CC) -o main $^
@@ -34,3 +34,5 @@ cpl_eigen.o: cpl_eigen.c $(HEADERS)
 cpl_stats.o: cpl_stats.c $(HEADERS)
 	$(CC) -c $<
 
+cpl_random.o: cpl_random.c $(HEADERS)
+	$(CC) -c $<

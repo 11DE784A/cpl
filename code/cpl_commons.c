@@ -18,16 +18,3 @@ int cpl_delta(int i, int j) {
 	return (i == j ? 1 : 0);
 }
 
-/* Random numbers */
-double cpl_rand() {
-	return (double) rand() / RAND_MAX;
-}
-
-double cpl_randn() {
-	return sqrt(-2*log(cpl_rand())) * cos(2*PI*cpl_rand());
-}
-
-double cpl_rand_uniform(double a, double b) {
-	return (b - a) * cpl_rand() + a;
-}
-

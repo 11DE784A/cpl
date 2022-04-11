@@ -532,17 +532,43 @@ Suite *array_suite(void) {
 	return s;
 }
 
-int main(void) {
-	int number_failed;
+START_TEST(test_rand_uniform) {
+	int N = 1e6;
+	double Σ = 0;
+	for (int i = 0; i < N; ++i)
+		Σ += cpl_rand_uniform(-1, 1);
+
+	ck_assert(abs(Σ / N) < TOL);
+
+} END_TEST
+
+Suite *rand_suite(void) {
 	Suite *s;
-	SRunner *sr;
+	TCase *tc_mlcg;
 
-	s = array_suite();
-	sr = srunner_create(s);
+	s = suite_create("Random Numbers");
 
-	srunner_run_all(sr, CK_NORMAL);
-	number_failed = srunner_ntests_failed(sr);
-	srunner_free(sr);
+	tc_mlcg = tcase_create("Multiplicative Linear Congruential Generator");
+	tcase_add_test(tc_mlcg, test_rand_uniform);
+
+	suite_add_tcase(s, tc_mlcg);
+
+	return s;
+}
+
+int main(void) {
+	int number_failed = 0;
+
+	#define NUM_SUITES 2
+	Suite *suites[NUM_SUITES] = {array_suite(), rand_suite()};
+	SRunner *runner;
+
+	for (int i = 0; i < NUM_SUITES; ++i) {
+		runner = srunner_create(suites[i]);
+		srunner_run_all(runner, CK_NORMAL);
+		number_failed += srunner_ntests_failed(runner);
+		srunner_free(runner);
+	}
 
 	return (number_failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
