@@ -77,30 +77,46 @@ cpl_tuple cpl_stats_jackknife(scalar (*f)(scalar), cpl_vector *x) {
 	return (cpl_tuple) {.first = mean_JK, .second = var_JK};
 }
 
-scalar cpl_stats_linfit(cpl_vector *x, cpl_vector *y, cpl_vector *σ, cpl_vector *params, cpl_matrix *Cov) {
-	return cpl_stats_polyfit(1, x, y, σ, params, Cov);
+scalar polynomial(int n, scalar x) {
+	return pow(x, n);
 }
 
-scalar cpl_stats_polyfit(int deg, cpl_vector *x, cpl_vector *y, cpl_vector *σ, cpl_vector *params, cpl_matrix *Cov) {
+scalar hermite(int n, scalar x) {
+	if (n == 0) {
+		return 1;
+	} else if (n == 1) {
+		return 2*x;
+	} else {
+		return 2*x*hermite(n - 1, x) - 2*n*hermite(n - 2, x);
+	}
+}
+
+scalar cpl_stats_linfit(cpl_vector *x, cpl_vector *y, cpl_vector *σ, cpl_vector *params, cpl_matrix *Cov) {
+	return cpl_stats_linreg(2, polynomial, x, y, σ, params, Cov);
+}
+
+scalar cpl_stats_linreg(int n, scalar (*F)(int, scalar),
+		cpl_vector *x, cpl_vector *y, cpl_vector *σ, 
+		cpl_vector *params, cpl_matrix *Cov) {
 
 	int N = cpl_vector_dim(y);
 
-	cpl_vector *b = cpl_vector_calloc(deg + 1);
-	cpl_matrix *A = cpl_matrix_calloc(deg + 1, deg + 1);
+	cpl_vector *b = cpl_vector_calloc(n);
+	cpl_matrix *A = cpl_matrix_calloc(n, n);
 
 	scalar bk, Akl;
-	for (int k = 1; k <= deg + 1; ++k) {
+	for (int k = 1; k <= n; ++k) {
 		bk = 0;
 		for (int i = 1; i <= N; ++i)
-			bk += pow(cpl_get(x, i), k - 1) * cpl_get(y, i) 
+			bk += F(k - 1, cpl_get(x, i)) * cpl_get(y, i)
 					/ (σ ? pow(cpl_get(σ, i), 2) : 1);
 
 		cpl_set(b, k, bk);
 
-		for (int l = 1; l <= deg + 1; ++l) {
+		for (int l = 1; l <= n; ++l) {
 			Akl = 0;
 			for (int i = 1; i <= N; ++i)
-				Akl += pow(cpl_get(x, i), k + l - 2) 
+				Akl += F(k - 1, cpl_get(x, i)) * F(l - 1, cpl_get(x, i))
 						/ (σ ? pow(cpl_get(σ, i), 2) : 1);
 
 			cpl_set(A, k, l, Akl);
@@ -113,7 +129,7 @@ scalar cpl_stats_polyfit(int deg, cpl_vector *x, cpl_vector *y, cpl_vector *σ, 
 
 	/* Covariance matrix */
 	if (Cov) {
-		cpl_matrix *id = cpl_matrix_id(deg + 1);
+		cpl_matrix *id = cpl_matrix_id(n);
 		cpl_linalg_seidel(A, id, Cov, NULL);
 		cpl_free(id);
 	}
@@ -125,12 +141,12 @@ scalar cpl_stats_polyfit(int deg, cpl_vector *x, cpl_vector *y, cpl_vector *σ, 
 	scalar χ2 = 0, yi;
 	for (int i = 1; i <= N; ++i) {
 		yi = 0;
-		for (int k = 0; k <= deg; ++k)
-			yi += cpl_get(params, k + 1) * pow(cpl_get(x, i), k);
+		for (int k = 0; k < n; ++k)
+			yi += cpl_get(params, k + 1) * F(k, cpl_get(x, i));
 		χ2 += pow((cpl_get(y, i) - yi) / (σ ? cpl_get(σ, i) : 1), 2);
 	}
 
-	χ2 /= (N - deg - 1);
+	χ2 /= (N - n);
 
 	return χ2;
 }

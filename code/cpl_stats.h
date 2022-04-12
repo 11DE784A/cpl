@@ -7,5 +7,10 @@ scalar cpl_stats_stdm(cpl_vector*, scalar);
 
 cpl_tuple cpl_stats_jackknife(scalar (*)(scalar), cpl_vector*);
 
+scalar polynomial(int, scalar);
+scalar hermite(int, scalar);
+
+scalar cpl_stats_linreg(int, scalar (*)(int, scalar), 
+		cpl_vector*, cpl_vector*, cpl_vector*, cpl_vector*, cpl_matrix*);
+
 scalar cpl_stats_linfit(cpl_vector*, cpl_vector*, cpl_vector*, cpl_vector*, cpl_matrix*);
-scalar cpl_stats_polyfit(int, cpl_vector*, cpl_vector*, cpl_vector*, cpl_vector*, cpl_matrix*);
