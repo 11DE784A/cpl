@@ -532,26 +532,58 @@ Suite *array_suite(void) {
 	return s;
 }
 
-START_TEST(test_rand_uniform) {
-	int N = 1e6;
-	double Σ = 0;
-	for (int i = 0; i < N; ++i)
-		Σ += cpl_rand_uniform(-1, 1);
+START_TEST(test_fit_linear) {
+	char fpath[30] = "data/fitting.txt";
+	cpl_vector *xdata = cpl_vector_loadtxt(fpath, 34, 54, 1);
+	cpl_vector *ydata = cpl_vector_loadtxt(fpath, 34, 54, 2);
+	cpl_vector *params = cpl_vector_loadtxt(fpath, 58, 59, 1);
 
-	ck_assert(abs(Σ / N) < TOL);
+	cpl_vector *params_calc = cpl_vector_alloc(2);
+	cpl_vector_set_all(params_calc, 1.0);
+	cpl_stats_linfit(xdata, ydata, NULL, params_calc, NULL);
+
+	ck_assert(cpl_vector_l2dist(params, params_calc) < TOL);
+
+	cpl_free(params_calc);
+	cpl_free(params);
+	cpl_free(ydata);
+	cpl_free(xdata);
+}
+
+START_TEST(test_fit_cubic) {
+	char fpath[30] = "data/fitting.txt";
+	cpl_vector *xdata = cpl_vector_loadtxt(fpath, 3, 23, 1);
+	cpl_vector *ydata = cpl_vector_loadtxt(fpath, 3, 23, 2);
+	cpl_vector *params = cpl_vector_loadtxt(fpath, 27, 30, 1);
+
+	cpl_vector *params_calc = cpl_vector_alloc(4);
+	cpl_vector_set_all(params_calc, 1.0);
+
+	cpl_stats_polyfit(3, xdata, ydata, NULL, params_calc, NULL);
+
+	ck_assert(cpl_vector_l2dist(params, params_calc) < TOL);
+
+	cpl_free(params_calc);
+	cpl_free(params);
+	cpl_free(xdata);
+	cpl_free(ydata);
 
 } END_TEST
 
-Suite *rand_suite(void) {
+Suite *fit_suite(void) {
 	Suite *s;
-	TCase *tc_mlcg;
+	TCase *tc_lin, *tc_cubic;
 
-	s = suite_create("Random Numbers");
+	s = suite_create("Least squares fitting");
 
-	tc_mlcg = tcase_create("Multiplicative Linear Congruential Generator");
-	tcase_add_test(tc_mlcg, test_rand_uniform);
+	tc_cubic = tcase_create("Cubic fitting");
+	tcase_add_test(tc_cubic, test_fit_cubic);
 
-	suite_add_tcase(s, tc_mlcg);
+	tc_lin = tcase_create("Linear fitting");
+	tcase_add_test(tc_lin, test_fit_linear);
+
+	suite_add_tcase(s, tc_cubic);
+	suite_add_tcase(s, tc_lin);
 
 	return s;
 }
@@ -560,7 +592,7 @@ int main(void) {
 	int number_failed = 0;
 
 	#define NUM_SUITES 2
-	Suite *suites[NUM_SUITES] = {array_suite(), rand_suite()};
+	Suite *suites[NUM_SUITES] = {array_suite(), fit_suite()};
 	SRunner *runner;
 
 	for (int i = 0; i < NUM_SUITES; ++i) {

@@ -78,82 +78,59 @@ cpl_tuple cpl_stats_jackknife(scalar (*f)(scalar), cpl_vector *x) {
 }
 
 scalar cpl_stats_linfit(cpl_vector *x, cpl_vector *y, cpl_vector *σ, cpl_vector *params, cpl_matrix *Cov) {
-	int N = cpl_vector_dim(y);
-
-	scalar U00 = 0, U10 = 0, U11 = 0, v0 = 0, v1 = 0, σi2;
-	for (int i = 1; i <= N; ++i) {
-		σi2 = pow(cpl_get(σ, i), 2);
-
-		U00 += 1.0 / σi2;
-		U10 += cpl_get(x, i) / σi2;
-		U11 += pow(cpl_get(x, i), 2) / σi2;
-
-		v0 += cpl_get(y, i) / σi2;
-		v1 += cpl_get(y, i) * cpl_get(x, i) / σi2;
-	}
-
-	scalar Δ = U00*U11 - U10*U10;
-
-	cpl_set(params, 1, (U11*v0 - U10*v1) / Δ);
-	cpl_set(params, 2, (-U10*v0 + U00*v1) / Δ);
-
-	cpl_set(Cov, 1, 1, U11);
-	cpl_set(Cov, 1, 2, -U10);
-	cpl_set(Cov, 2, 1, -U10);
-	cpl_set(Cov, 2, 2, U00);
-	cpl_matrix_scale(Cov, 1.0 / Δ);
-
-	scalar χ2 = 0;
-	for (int i = 1; i <= N; ++i) {
-		χ2 += pow((cpl_get(y, i) - cpl_get(params, 1) - cpl_get(params, 2) * cpl_get(x, i)) / cpl_get(σ, i), 2);
-	}
-
-	return χ2 / (N - 2.0);
+	return cpl_stats_polyfit(1, x, y, σ, params, Cov);
 }
 
-scalar cpl_stats_polyfit(int degree, cpl_vector *x, cpl_vector *y, cpl_vector *σ, 
-					   cpl_vector *params, cpl_matrix *Cov) {
+scalar cpl_stats_polyfit(int deg, cpl_vector *x, cpl_vector *y, cpl_vector *σ, cpl_vector *params, cpl_matrix *Cov) {
 
 	int N = cpl_vector_dim(y);
 
-	cpl_vector *b = cpl_vector_calloc(degree + 1);
-	cpl_matrix *A = cpl_matrix_calloc(degree + 1, degree + 1);
+	cpl_vector *b = cpl_vector_calloc(deg + 1);
+	cpl_matrix *A = cpl_matrix_calloc(deg + 1, deg + 1);
 
-	for (int i = 0; i <= degree; ++i) {
-		scalar bi = 0;
-		for (int j = 0; j <= degree; ++j) {
-			scalar Aij = 0;
-			for (int k = 1; k <= N; ++k)
-				Aij += pow(cpl_get(x, k), i + j - 2) / pow(cpl_get(σ, k), 2);
-			cpl_set(A, i, j, Aij);
+	scalar bk, Akl;
+	for (int k = 1; k <= deg + 1; ++k) {
+		bk = 0;
+		for (int i = 1; i <= N; ++i)
+			bk += pow(cpl_get(x, i), k - 1) * cpl_get(y, i) 
+					/ (σ ? pow(cpl_get(σ, i), 2) : 1);
 
-			bi += (cpl_get(y, j) * pow(cpl_get(x, j), i)) / pow(cpl_get(σ, j), 2);
+		cpl_set(b, k, bk);
+
+		for (int l = 1; l <= deg + 1; ++l) {
+			Akl = 0;
+			for (int i = 1; i <= N; ++i)
+				Akl += pow(cpl_get(x, i), k + l - 2) 
+						/ (σ ? pow(cpl_get(σ, i), 2) : 1);
+
+			cpl_set(A, k, l, Akl);
 		}
-		cpl_set(b, i, bi);
+
 	}
 
-	// Parameters
+	/* Fitting parameters */
 	cpl_linalg_conjgrad_solve(A, b, params, NULL);
 
-	// Covariance matrix
-	cpl_matrix *id = cpl_matrix_id(degree + 1);
-	cpl_linalg_conjgrad(A, id, Cov);
-
-	// Goodness of fit
-	scalar χ2 = 0;
-	for (int i = 1; i <= N; ++i) {
-		scalar yi = 0;
-		for (int k = 0; k <= degree; ++k)
-			yi += cpl_get(params, k) * pow(cpl_get(x, i), k);
-		χ2 += pow((cpl_get(y, i) - yi) / cpl_get(σ, i), 2);
+	/* Covariance matrix */
+	if (Cov) {
+		cpl_matrix *id = cpl_matrix_id(deg + 1);
+		cpl_linalg_seidel(A, id, Cov, NULL);
+		cpl_free(id);
 	}
 
-	int Ndof = N - degree - 1;
-	χ2 /= Ndof;
-
-	cpl_free(id);
-	cpl_free(b);
 	cpl_free(A);
+	cpl_free(b);
+
+	/* Goodness of fit */
+	scalar χ2 = 0, yi;
+	for (int i = 1; i <= N; ++i) {
+		yi = 0;
+		for (int k = 0; k <= deg; ++k)
+			yi += cpl_get(params, k + 1) * pow(cpl_get(x, i), k);
+		χ2 += pow((cpl_get(y, i) - yi) / (σ ? cpl_get(σ, i) : 1), 2);
+	}
+
+	χ2 /= (N - deg - 1);
 
 	return χ2;
 }
