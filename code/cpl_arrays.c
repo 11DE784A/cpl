@@ -358,6 +358,26 @@ void cpl_matrix_print(cpl_matrix *M) {
 
 /* Matrix algebra */
 
+scalar cpl_matrix_trace(cpl_matrix *M) {
+	cpl_check(cpl_matrix_issquare(M), "Cannot take trace of non-square matrix");
+
+	scalar TrM = 0;
+	for (int i = 1; i <= cpl_matrix_rows(M); ++i)
+		TrM += cpl_matrix_get(M, i, i);
+
+	return TrM;
+}
+
+scalar cpl_matrix_frobnorm(cpl_matrix *M) {
+	scalar Σ = 0;
+	for (int i = 1; i <= cpl_matrix_rows(M); ++i) {
+		for (int j = 1; j <= cpl_matrix_cols(M); ++j)
+			Σ += pow(sabs(cpl_get(M, i, j)), 2);
+	}
+
+	return sqrt(Σ);
+}
+
 cpl_matrix *cpl_matrix_adjoint(cpl_matrix *M) {
 	cpl_matrix *M_adj = cpl_matrix_alloc(cpl_matrix_cols(M), cpl_matrix_rows(M));
 

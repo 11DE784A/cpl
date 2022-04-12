@@ -104,6 +104,8 @@ void cpl_matrix_print(cpl_matrix*);
 cpl_vector *cpl_vector_add(cpl_vector*, cpl_vector*);
 cpl_matrix *cpl_matrix_add(cpl_matrix*, cpl_matrix*);
 
+scalar cpl_matrix_trace(cpl_matrix*);
+scalar cpl_matrix_frobnorm(cpl_matrix*);
 cpl_matrix *cpl_matrix_adjoint(cpl_matrix*);
 cpl_vector *cpl_mvector_mult(cpl_matrix*, cpl_vector*);
 cpl_matrix *cpl_mmatrix_mult(cpl_matrix*, cpl_matrix*);

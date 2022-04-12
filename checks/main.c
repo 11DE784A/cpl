@@ -74,7 +74,8 @@ START_TEST(test_vectors) {
 } END_TEST
 
 START_TEST(test_norms) {
-	int dim = 4;
+	/* Vector norms */
+	int dim = 6;
 
 	cpl_vector *v = cpl_vector_hot(dim);
 	cpl_vector *e1 = cpl_vector_1hot(dim, 1);
@@ -98,6 +99,13 @@ START_TEST(test_norms) {
 	cpl_free(v);
 	cpl_free(e2);
 	cpl_free(e1);
+
+	/* Frobenius norm */
+	char fpath[30] = "data/linear_system.txt";
+	cpl_matrix *A = cpl_matrix_loadtxt(fpath, 2, 7, 6);
+	ck_assert(cpl_matrix_frobnorm(A) == sqrt(53.5625));
+
+	cpl_free(A);
 } END_TEST
 
 START_TEST(test_stack) {
@@ -286,6 +294,9 @@ START_TEST(test_algebra) {
 
 	cpl_vector *b = cpl_vector_alloc(dim);
 	cpl_vector_build(b, -5.0/2, 2.0/3, 3.0, -4.0/3, -1.0/3, 5.0/3);
+
+	/* Trace */
+	ck_assert(cpl_matrix_trace(A) == 7.0);
 
 	/* Vector scaling */
 	cpl_vector *b_copy = cpl_vector_copy(b);
