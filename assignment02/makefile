@@ -4,13 +4,13 @@ CC=gcc $(LINKS) $(CFLAGS)
 
 VPATH=../code/
 
-OBJECTS=main.o cpl_arrays.o cpl_commons.o cpl_linalg.o cpl_format.o cpl_random.o
+OBJECTS=main.o cpl_arrays.o cpl_commons.o cpl_linalg.o cpl_format.o cpl_random.o cpl_stats.o
 
 main: $(OBJECTS)
 	$(CC) -o main $^
 
 HEADERS=cpl_defines.h cpl_includes.h cpl_bench.h cpl_commons.h cpl_arrays.h \
-		cpl_linalg.h cpl.h cpl_format.h cpl_random.h
+		cpl_linalg.h cpl.h cpl_format.h cpl_random.h cpl_stats.h
 
 main.o: main.c $(HEADERS)
 	$(CC) -c $<

@@ -1,6 +1,37 @@
 #include "../code/cpl.h"
 #include "../code/cpl_bench.h"
 
+double modified_chebyshev(int n, double x) {
+	if (n == 0) {
+		return 1;
+	} else if (n == 1) {
+		return 2*x - 1;
+	} else if (n == 2) {
+		return 8*pow(x, 2) - 8*x + 1;
+	} else if (n == 3) {
+		return 32*pow(x, 3) - 48*pow(x, 2) + 18*x -1;
+	}
+
+	return 0;
+}
+
+double condition_number(cpl_matrix *M) {
+	int dim = cpl_matrix_rows(M);
+
+	cpl_matrix *id = cpl_matrix_id(dim);
+
+	cpl_matrix *Minv = cpl_matrix_alloc(dim, dim);
+	cpl_matrix_set_all(Minv, 1.0);
+
+	cpl_linalg_seidel(M, id, Minv, NULL);
+	double cond = cpl_matrix_frobnorm(M) * cpl_matrix_frobnorm(Minv);
+
+	cpl_free(id);
+	cpl_free(Minv);
+
+	return cond;
+}
+
 double estimate_pi(int max_iters) {
 	double x, y;
 	int points_inside_circle = 0;
@@ -60,9 +91,54 @@ double steinmetz_volume(double r, int N) {
 }
 
 int main() {
-	int max_iters = 1e6;
+	/*** Question 1 ***/
+	cpl_vector *xdata = cpl_vector_loadtxt("assign2fit.txt", 2, 22, 1);
+	cpl_vector *ydata = cpl_vector_loadtxt("assign2fit.txt", 2, 22, 2);
+
+	int params = 4;
+
+	printf("\n# Question 1\n");
+
+	/* For cubic polynomial */
+	cpl_vector *a_poly = cpl_vector_alloc(params);
+	cpl_vector_set_all(a_poly, 1.0);
+
+	cpl_matrix *Cov_poly = cpl_matrix_alloc(params, params);
+	cpl_matrix_set_all(Cov_poly, 1.0);
+
+	cpl_stats_linreg(params, polynomial, xdata, ydata, NULL, a_poly, Cov_poly);
+
+	printf("\nParameters for fitting with polynomials:\n");
+	cpl_print(a_poly);
+
+	printf("Condition number: %.4g\n", condition_number(Cov_poly));
+
+	/* For modified Chebyshev functions */
+	cpl_vector *a_cheby = cpl_vector_alloc(params);
+	cpl_vector_set_all(a_cheby, 1.0);
+
+	cpl_matrix *Cov_cheby = cpl_matrix_alloc(params, params);
+	cpl_matrix_set_all(Cov_cheby, 1.0);
+
+	cpl_stats_linreg(params, modified_chebyshev, xdata, ydata, NULL, a_cheby, Cov_cheby);
+
+	printf("\nParameters for fitting with modified Chebyshev functions:\n");
+	cpl_print(a_cheby);
+
+	printf("Condition number: %.4g\n", condition_number(Cov_cheby));
+
+	printf("\nLower condition number for Chebyshev functions implies greater numerical stability and roughly upto 4 digits of additional numerical accuracy that is lost when fitting with regular polynomials.\n");
+
+	cpl_free(a_cheby);
+	cpl_free(Cov_cheby);
+	cpl_free(a_poly);
+	cpl_free(Cov_poly);
+	cpl_free(xdata);
+	cpl_free(ydata);
 
 	/*** Question 2 ***/
+	int max_iters = 1e6;
+
 	printf("\n# Question 2\n");
 
 	printf("\n## Estimating π by throwing points\n");

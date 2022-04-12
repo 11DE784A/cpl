@@ -1,0 +1,38 @@
+
+# Question 1
+
+Parameters for fitting with polynomials:
+4-dimensional vector (double)
+  0.5747  
+  4.726   
+ -11.13   
+  7.669   
+
+Condition number: 1.22e+04
+
+Parameters for fitting with modified Chebyshev functions:
+4-dimensional vector (double)
+  1.161   
+  0.3935  
+  0.04685 
+  0.2396  
+
+Condition number: 6.404
+
+Lower condition number for Chebyshev functions implies greater numerical stability and roughly upto 4 digits of additional numerical accuracy that is lost when fitting with regular polynomials.
+
+# Question 2
+
+## Estimating π by throwing points
+With a =  65, m =  1021, and num_points = 1e+06: π = 3.20785200
+With a = 572, m = 16381, and num_points = 1e+06: π = 3.14821600
+
+## Estimating π by Monte-Carlo evaluation of ∫√(1 - x²)dx
+With a =  65, m =  1021, and num_points = 1e+06: 4⋅∫√(1 - x²)dx = 3.14267253
+With a = 572, m = 16381, and num_points = 1e+06: 4⋅∫√(1 - x²)dx = 3.14170311
+
+We see that the choice a = 527 and m = 16381 gives better estimate of π in both cases.
+
+# Question 3
+
+Volume of Steinmetz solid computed by Monte-Carlo: 5.34794400
