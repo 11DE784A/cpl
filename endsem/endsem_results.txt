@@ -1,0 +1,37 @@
+
+# Question 01
+
+RMS distance =  14.0209
+√N =  14.1421
+
+# Question 02
+
+We do fitting with fourth order Legendre polynomial, i.e., with five fitting parameters.
+
+A plot of data and fitted polynomial is given in "q2_fit.png".
+
+Parameters for fitting with polynomials:
+5-dimensional vector (double)
+  0.06966 
+  0.003624
+ -0.01208 
+  0.01143 
+  0.1105  
+
+
+# Question 03
+
+Plot of temperature profile at different time steps is given in "q3_profile.png".
+
+We see that the initial temperature profile "diffuses" with time and the rod is
+coming to equilibrium. Moreover, from the contour plot in "q3_contour.png", we
+can see that in 5000 time steps, due to both ends being held at 0°C, the entire
+rod slowly goes to equilibrium at 0°C.
+
+# Question 04
+
+For this problem we have to do the integral: ∫dx/√(1 + x²) from -1 to +1
+The exact answer is ln(1 + √2) - ln(-1 + √2) =  1.762747174
+Gaussian quadrature with N = 4:  1.762054179
+Gaussian quadrature with N = 5:  1.762855295
+Gaussian quadrature with N = 6:  1.762730055

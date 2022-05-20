@@ -1,3 +1,7 @@
+#include "cpl_defines.h"
+#include "cpl_includes.h"
+
+#include "cpl_arrays.h"
 #include "cpl_random.h"
 
 static int SEED = 1;
@@ -26,9 +30,23 @@ double cpl_rand_uniform(double a, double b) {
 }
 
 double cpl_mcint1d_naive(double (*f)(double), double a, double b, int N) {
-	double Σf = 0;
-	for (int i = 0; i < N; ++i)
-		Σf += f(cpl_rand_uniform(a, b));
+	double x, Σf = 0;
+	for (int i = 0; i < N; ++i) {
+		x = cpl_rand_uniform(a, b);
+		Σf += f(x);
+	}
 
-	return Σf / N;
+	return Σf * (b - a) / N;
+}
+
+double cpl_mcint_box_naive(double (*f)(cpl_vector *), int dim, double a, double b, int N) {
+	double Σf = 0;
+	cpl_vector *x = cpl_vector_alloc(dim);
+	for (int i = 0; i < N; ++i) {
+		for (int j = 1; j <= dim; ++j)
+			cpl_set(x, j, cpl_rand_uniform(a, b));
+		Σf += f(x);
+	}
+
+	return Σf * pow(b - a, dim) / N;
 }

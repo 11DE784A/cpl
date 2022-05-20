@@ -598,11 +598,192 @@ Suite *fit_suite(void) {
 	return s;
 }
 
+START_TEST(test_simp) {
+	double cube(double x, void *params) {
+		double a = * (double *) params;
+		return a*pow(x, 3);
+	}
+
+	double a = 1;
+	cpl_function F;
+	F.function = cube;
+	F.params = &a;
+
+	double Σ = cpl_integrate_simpson(F, 0, 2, 10);
+	ck_assert(abs(Σ - 4) < TOL);
+
+	Σ = cpl_integrate_trapezoid(F, 0, 2, 10);
+	ck_assert(abs(Σ - 4) < 0.01);
+
+} END_TEST
+
+Suite *int_suite(void) {
+	Suite *s;
+	TCase *tc_simp;
+
+	s = suite_create("Integration");
+	tc_simp = tcase_create("Simpson's rule");
+	tcase_add_test(tc_simp, test_simp);
+
+	suite_add_tcase(s, tc_simp);
+
+	return s;
+}
+
+double test_scale(double x, void *params) {
+	double a = * (double *) params;
+	return a * x;
+}
+
+START_TEST(test_1param) {
+	double a = 3.0;
+
+	cpl_function F;
+	F.params = &a;
+	F.function = test_scale;
+
+	for (float x = 0; x <= 2; x += 0.2)
+		ck_assert(cpl_fn_eval(F, x) == a*x);
+} END_TEST
+
+double test_affine(double x, void *params) {
+	double *a = params;
+	return a[0]*x + a[1];
+}
+
+START_TEST(test_2param) {
+	double a[2] = {3.0, 1.0};
+
+	cpl_function F;
+	F.params = a;
+	F.function = test_affine;
+
+	for (float x = 0; x <= 2; x += 0.2)
+		ck_assert(cpl_fn_eval(F, x) == a[0]*x + a[1]);
+} END_TEST
+
+Suite *misc_suite(void) {
+	Suite *s;
+	TCase *tc_fn;
+	
+	s = suite_create("Miscellaneous");
+
+	tc_fn = tcase_create("Functions");
+	tcase_add_test(tc_fn, test_1param);
+	tcase_add_test(tc_fn, test_2param);
+	suite_add_tcase(s, tc_fn);
+
+	return s;
+}
+
+START_TEST(test_laplace_dirichlet) {
+	int N = 21;
+	double h = 1.0 / (N - 1);
+	cpl_matrix *U = cpl_matrix_alloc(N, N);
+
+	/* Boundary conditions */
+	cpl_matrix_set_all(U, 0);
+	cpl_matrix_set_row(U, 1, 1);
+	cpl_matrix_set_row(U, N, 0);
+	cpl_matrix_set_col(U, 1, 0);
+	cpl_matrix_set_col(U, N, 0);
+
+	cpl_diffeq_laplace_dirichlet(U, h, h);
+	cpl_free(U);
+} END_TEST
+
+START_TEST(test_heat_forward) {
+	int Nx = 41, Nt = 5;
+	double dx = 1.0 / (Nx - 1),
+		   dt = 0.001 / (Nt - 1);
+	cpl_matrix *U = cpl_matrix_alloc(Nx, Nt);
+
+	cpl_matrix_set_row(U, 1, 0.0);
+	cpl_matrix_set_row(U, Nx, 0.0);
+
+	for (int ix = 1; ix <= Nx; ++ix)
+		cpl_set(U, ix, 1, sin(PI*(ix - 1)*dx));
+
+	cpl_diffeq_heat_forward(U, 1.0, dx, dt);
+
+	cpl_free(U);
+} END_TEST
+
+START_TEST(test_heat_backward) {
+	int Nx = 41, Nt = 41;
+	double dx = 1.0 / (Nx - 1),
+		   dt = 1.0 / (Nt - 1);
+	cpl_matrix *U = cpl_matrix_alloc(Nx, Nt);
+
+	cpl_matrix_set_row(U, 1, 0.0);
+	cpl_matrix_set_row(U, Nx, 0.0);
+
+	for (int ix = 1; ix <= Nx; ++ix)
+		cpl_set(U, ix, 1, sin(PI*(ix - 1)*dx));
+
+	cpl_diffeq_heat_backward(U, 1.0, dx, dt);
+
+	cpl_free(U);
+} END_TEST
+
+cpl_vector *pendulum(cpl_vector *y, double t) {
+	double k = 3;
+
+	double  θ = cpl_get(y, 1),
+		   dθ = cpl_get(y, 2);
+
+	cpl_set(y, 1, dθ);
+	cpl_set(y, 2, -k*θ);
+
+	return y;
+}
+
+START_TEST(test_rk4_pendulum) {
+	int N = 101;
+	double h = 0.05;
+	cpl_vector *t = cpl_vector_alloc(N);
+	for (int i = 1; i <= N; ++i)
+		cpl_set(t, i, (i - 1)*h);
+
+	cpl_print(t);
+
+	cpl_matrix *y = cpl_matrix_alloc(N, 2);
+	cpl_matrix_set_all(y, 0);
+	cpl_matrix_set(y, 1, 1, 1);
+	cpl_matrix_set(y, 1, 2, 0);
+
+	cpl_diffeq_rk4(pendulum, y, t, h);
+
+	cpl_print(y);
+
+	cpl_free(t);
+	cpl_free(y);
+} END_TEST
+
+Suite *diffeq_suite(void) {
+	Suite *s;
+	TCase *tc_pde, *tc_ode;
+
+	s = suite_create("Differential Equations");
+
+	tc_pde = tcase_create("Partial Differential Equations");
+	tcase_add_test(tc_pde, test_laplace_dirichlet);
+	tcase_add_test(tc_pde, test_heat_forward);
+	tcase_add_test(tc_pde, test_heat_backward);
+	suite_add_tcase(s, tc_pde);
+
+	tc_ode = tcase_create("Ordinary Differential Equations");
+	tcase_add_test(tc_ode, test_rk4_pendulum);
+	suite_add_tcase(s, tc_ode);
+
+	return s;
+}
+
 int main(void) {
 	int number_failed = 0;
 
-	#define NUM_SUITES 2
-	Suite *suites[NUM_SUITES] = {array_suite(), fit_suite()};
+	#define NUM_SUITES 5
+	Suite *suites[NUM_SUITES] = {array_suite(), fit_suite(), int_suite(), misc_suite(), diffeq_suite()};
 	SRunner *runner;
 
 	for (int i = 0; i < NUM_SUITES; ++i) {

@@ -5,13 +5,14 @@ CC=gcc $(LINKS) $(CFLAGS)
 VPATH=../code
 
 OBJECTS=main.o cpl_arrays.o cpl_commons.o cpl_linalg.o cpl_format.o \
-		cpl_eigen.o cpl_stats.o cpl_random.o
+		cpl_eigen.o cpl_stats.o cpl_random.o cpl_integration.o cpl_diffeq.o
 
 main: $(OBJECTS)
 	$(CC) -o main $^
 
 HEADERS=cpl_defines.h cpl_includes.h cpl_bench.h cpl_commons.h cpl_arrays.h \
-		cpl_linalg.h cpl.h cpl_format.h cpl_eigen.h cpl_stats.h
+		cpl_linalg.h cpl.h cpl_format.h cpl_eigen.h cpl_stats.h cpl_integration.h \
+		cpl_diffeq.h
 
 main.o: main.c $(HEADERS)
 	$(CC) -c $<
@@ -36,3 +37,10 @@ cpl_stats.o: cpl_stats.c $(HEADERS)
 
 cpl_random.o: cpl_random.c $(HEADERS)
 	$(CC) -c $<
+
+cpl_integration.o: cpl_integration.c $(HEADERS)
+	$(CC) -c $<
+
+cpl_diffeq.o: cpl_diffeq.c $(HEADERS)
+	$(CC) -c $<
+

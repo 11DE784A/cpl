@@ -8,4 +8,5 @@
 #include "cpl_random.h"
 #include "cpl_stats.h"
 #include "cpl_transform.h"
-
+#include "cpl_integration.h"
+#include "cpl_diffeq.h"

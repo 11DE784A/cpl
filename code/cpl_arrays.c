@@ -215,11 +215,15 @@ void cpl_vector_overwrite(cpl_vector *u, cpl_vector *v) {
 		cpl_set(u, i, cpl_get(v, i));
 }
 
+void cpl_vector_fprint(FILE *fp, cpl_vector *v) {
+	for (int i = 1; i <= cpl_vector_dim(v); ++i)
+		fprintf(fp, " " xstr(sfmt) "\n", cpl_vector_get(v, i));
+	fprintf(fp, "\n");
+}
+
 void cpl_vector_print(cpl_vector *v) {
 	printf("%d-dimensional vector (" xstr(scalar) ")\n", cpl_vector_dim(v));
-	for (int i = 1; i <= cpl_vector_dim(v); ++i)
-		printf(" " xstr(sfmt) "\n", cpl_vector_get(v, i));
-	printf("\n");
+	cpl_vector_fprint(stdout, v);
 }
 
 /* Matrices */
@@ -342,18 +346,22 @@ cpl_matrix *cpl_matrix_scale(cpl_matrix *M, scalar c) {
 	return M;
 }
 
+void cpl_matrix_fprint(FILE *fp, cpl_matrix *M) {
+	for (int i = 1; i <= cpl_matrix_rows(M); ++i) {
+		fprintf(fp, " ");
+		for (int j = 1; j <= cpl_matrix_cols(M); ++j) {
+			fprintf(fp, xstr(sfmt) "\t", cpl_matrix_get(M, i, j));
+		}
+		fprintf(fp, "\n");
+	}
+
+	fprintf(fp, "\n");
+}
+
 void cpl_matrix_print(cpl_matrix *M) {
 	printf("%dx%d matrix (" xstr(scalar) ")\n", cpl_matrix_rows(M), 
 												cpl_matrix_cols(M));
-	for (int i = 1; i <= cpl_matrix_rows(M); ++i) {
-		printf(" ");
-		for (int j = 1; j <= cpl_matrix_cols(M); ++j) {
-			printf(xstr(sfmt) "\t", cpl_matrix_get(M, i, j));
-		}
-		printf("\n");
-	}
-
-	printf("\n");
+	cpl_matrix_fprint(stdout, M);
 }
 
 /* Matrix algebra */
@@ -489,6 +497,14 @@ cpl_matrix *cpl_mmatrix_mult(cpl_matrix *M, cpl_matrix *N) {
 	return M;
 }
 
+cpl_vector *cpl_vector_axby(double a, cpl_vector *x, double b, cpl_vector *y) {
+	for (int i = 1; i <= cpl_vector_dim(x); ++i) {
+		cpl_set(x, i, a * cpl_get(x, i) + b * cpl_get(y, i));
+	}
+
+	return x;
+}
+
 /* Row & Column operations */
 
 void cpl_matrix_get_row(cpl_matrix *M, int i, cpl_vector *v) {
@@ -497,6 +513,19 @@ void cpl_matrix_get_row(cpl_matrix *M, int i, cpl_vector *v) {
 
 	for (int j = 1; j <= cpl_matrix_cols(M); ++j)
 		cpl_vector_set(v, j, cpl_matrix_get(M, i, j));
+}
+
+void cpl_matrix_set_row_scalar(cpl_matrix *M, int i, scalar c) {
+	for (int j = 1; j <= cpl_matrix_cols(M); ++j)
+		cpl_matrix_set(M, i, j, c);
+}
+
+void cpl_matrix_set_row_vector(cpl_matrix *M, int i, cpl_vector *v) {
+	cpl_check(cpl_vector_dim(v) == cpl_matrix_cols(M),
+			"Size mismatch when setting row");
+
+	for (int j = 1; j <= cpl_matrix_cols(M); ++j)
+		cpl_matrix_set(M, i, j, cpl_vector_get(v, j));
 }
 
 void cpl_matrix_scale_row(cpl_matrix *M, int i, scalar c) {
@@ -530,6 +559,19 @@ void cpl_matrix_get_col(cpl_matrix *M, int i, cpl_vector *v) {
 		cpl_vector_set(v, j, cpl_matrix_get(M, j, i));
 }
 
+void cpl_matrix_set_col_scalar(cpl_matrix *M, int j, scalar c) {
+	for (int i = 1; i <= cpl_matrix_rows(M); ++i)
+		cpl_matrix_set(M, i, j, c);
+}
+
+void cpl_matrix_set_col_vector(cpl_matrix *M, int j, cpl_vector *v) {
+	cpl_check(cpl_vector_dim(v) == cpl_matrix_rows(M),
+			"Size mismatch when setting column");
+
+	for (int i = 1; i <= cpl_matrix_rows(M); ++i)
+		cpl_matrix_set(M, i, j, cpl_vector_get(v, i));
+}
+
 cpl_vector *cpl_matrix_flatten(cpl_matrix *M) {
 	int size = cpl_matrix_rows(M) * cpl_matrix_cols(M);
 	cpl_vector *v = cpl_vector_alloc(size);
@@ -537,6 +579,13 @@ cpl_vector *cpl_matrix_flatten(cpl_matrix *M) {
 		v->block->array[i] = M->block->array[i];
 
 	return v;
+}
+
+void cpl_matrix_savetxt(char *fpath, cpl_matrix *M, char *title) {
+	FILE *fp = fopen(fpath, "w");
+	title ? fprintf(fp, "%s \n", title) : 0 ;
+	cpl_matrix_fprint(fp, M);
+	fclose(fp);
 }
 
 cpl_matrix *cpl_matrix_loadtxt(char *fpath, int start, int end, int cols) {
@@ -557,6 +606,8 @@ cpl_matrix *cpl_matrix_loadtxt(char *fpath, int start, int end, int cols) {
 			}
 		}
 	}
+
+	fclose(fp);
 
 	return X;
 }
@@ -579,6 +630,8 @@ cpl_vector *cpl_vector_loadtxt(char *fpath, int start, int end, int col) {
 			cpl_set(v, i - start + 1, x);
 		}
 	}
+
+	fclose(fp);
 
 	return v;
 }

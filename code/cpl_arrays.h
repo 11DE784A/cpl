@@ -58,6 +58,7 @@ cpl_vector *cpl_vector_scale(cpl_vector*, scalar);
 cpl_vector *cpl_vector_push(cpl_vector*, scalar);
 scalar cpl_vector_pop(cpl_vector*);
 
+void cpl_vector_fprint(FILE *, cpl_vector *);
 void cpl_vector_print(cpl_vector*);
 
 /* Matrices */
@@ -90,18 +91,24 @@ int cpl_matrix_isequal(cpl_matrix*, cpl_matrix*);
 cpl_matrix *cpl_matrix_scale(cpl_matrix*, scalar);
 
 void cpl_matrix_get_row(cpl_matrix*, int, cpl_vector*);
+void cpl_matrix_set_row_scalar(cpl_matrix*, int, scalar);
+void cpl_matrix_set_row_vector(cpl_matrix*, int, cpl_vector*);
 void cpl_matrix_scale_row(cpl_matrix*, int, scalar);
 int cpl_matrix_swap_rows(cpl_matrix*, int ,int);
 void cpl_matrix_add_to_row(cpl_matrix*, int, cpl_vector*);
 
 void cpl_matrix_get_col(cpl_matrix*, int, cpl_vector*);
+void cpl_matrix_set_col_scalar(cpl_matrix*, int, scalar);
+void cpl_matrix_set_col_vector(cpl_matrix*, int, cpl_vector*);
 cpl_vector *cpl_matrix_flatten(cpl_matrix*);
 
+void cpl_matrix_fprint(FILE *, cpl_matrix *);
 void cpl_matrix_print(cpl_matrix*);
 
 /* Matrix algebra */
 
 cpl_vector *cpl_vector_add(cpl_vector*, cpl_vector*);
+cpl_vector *cpl_vector_axby(double, cpl_vector *, double, cpl_vector *);
 cpl_matrix *cpl_matrix_add(cpl_matrix*, cpl_matrix*);
 
 scalar cpl_matrix_trace(cpl_matrix*);
@@ -119,6 +126,7 @@ scalar cpl_func_get(scalar (*)(int, int), int, int);
 cpl_vector *cpl_mvfly_mult_alloc(scalar (*)(int, int), cpl_vector*);
 cpl_vector *cpl_mvfly_mult_overwrite(scalar (*)(int, int), cpl_vector*, cpl_vector*);
 
+void cpl_matrix_savetxt(char *, cpl_matrix *, char *);
 cpl_matrix *cpl_matrix_loadtxt(char *, int, int, int);
 cpl_vector *cpl_vector_loadtxt(char *, int, int, int);
 
@@ -175,4 +183,16 @@ cpl_vector *cpl_vector_loadtxt(char *, int, int, int);
 #define cpl_mult_overwrite(X, Y, Z) _Generic((Y), \
 	cpl_vector*: cpl_mvector_mult_overwrite \
 )(X, Y, Z)
+
+#define cpl_matrix_set_col(A, j, x) _Generic((x), \
+	cpl_vector*: cpl_matrix_set_col_vector, \
+	scalar: cpl_matrix_set_col_scalar, \
+	int: cpl_matrix_set_col_scalar \
+)(A, j, x)
+
+#define cpl_matrix_set_row(A, j, x) _Generic((x), \
+	cpl_vector*: cpl_matrix_set_row_vector, \
+	scalar: cpl_matrix_set_row_scalar, \
+	int: cpl_matrix_set_row_scalar \
+)(A, j, x)
 
