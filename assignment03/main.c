@@ -145,7 +145,7 @@ int main() {
 	cpl_diffeq_laplace_dirichlet(ϕ, dx, dy);
 
 	printf("Solution matrix:\n");
-	// cpl_print(ϕ);
+	cpl_print(ϕ);
 
 	// Plotting
 	cpl_matrix_savetxt("q3_laplace.txt", ϕ, NULL);
